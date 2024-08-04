@@ -293,7 +293,7 @@ const ChefSortingPage = () => {
               </Text>
               <Text fontWeight="bold">Price: ${selectedChef?.price}/hr</Text>
               <Button colorScheme="orange" onClick={onClose}>
-                <Link to={`/chef/${selectedChef?.id}`}>
+                <Link to={`/chefs/${selectedChef?.id}`}>
                   Book {selectedChef?.name}
                 </Link>
               </Button>

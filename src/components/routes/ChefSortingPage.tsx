@@ -39,6 +39,7 @@ const ChefSortingPage = () => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedChef, setSelectedChef] = useState<{
+    id: number;
     name: string;
     categories: string[];
     price: number;
@@ -198,17 +199,15 @@ const ChefSortingPage = () => {
                     <Heading size="md">{chef.name}</Heading>
                     <Wrap spacing={2} mt={1}>
                       {chef.categories.map((category) => (
-                        <Link to={`/chef/${chef.id}`}>
-                          <WrapItem key={category}>
-                            <Badge
-                              colorScheme="purple"
-                              fontSize="0.8em"
-                              borderRadius="full"
-                            >
-                              {category}
-                            </Badge>
-                          </WrapItem>
-                        </Link>
+                        <WrapItem key={category}>
+                          <Badge
+                            colorScheme="purple"
+                            fontSize="0.8em"
+                            borderRadius="full"
+                          >
+                            {category}
+                          </Badge>
+                        </WrapItem>
                       ))}
                     </Wrap>
                   </Box>
@@ -294,7 +293,9 @@ const ChefSortingPage = () => {
               </Text>
               <Text fontWeight="bold">Price: ${selectedChef?.price}/hr</Text>
               <Button colorScheme="orange" onClick={onClose}>
-                Book {selectedChef?.name}
+                <Link to={`/chef/${selectedChef?.id}`}>
+                  Book {selectedChef?.name}
+                </Link>
               </Button>
             </VStack>
           </ModalBody>

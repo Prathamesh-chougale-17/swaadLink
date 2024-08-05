@@ -130,7 +130,7 @@ const NearbyChefs = () => {
             </Marker>
           ))}
           {userLocation && (
-            <Marker position={userLocation}>
+            <Marker position={userLocation} icon={chefIcon}>
               <Popup>Your Location</Popup>
             </Marker>
           )}

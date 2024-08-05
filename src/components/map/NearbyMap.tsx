@@ -1,162 +1,283 @@
-import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { Icon, LatLngExpression } from "leaflet";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
-  VStack,
-  Heading,
-  Text,
-  List,
-  ListItem,
-  Avatar,
+  Button,
   Flex,
+  Input,
+  VStack,
+  Text,
   useToast,
 } from "@chakra-ui/react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// import axios from "axios";
 
-// You'll need to add a chef icon image to your public folder
-const chefIcon = new Icon({
-  iconUrl: "/vite.svg",
-  iconSize: [38, 38],
-});
+// Define types
+interface Chef {
+  id: string;
+  name: string;
+  categories: string[];
+  rating: number;
+  price: number;
+  location: [number, number]; // [latitude, longitude]
+}
 
-const NearbyChefs = () => {
-  const [userLocation, setUserLocation] = useState<LatLngExpression>();
-  const [nearbyChefs, setNearbyChefs] = useState<
-    {
-      id: number;
-      name: string;
-      location: number[];
-      rating: number;
-      cuisine: string;
-    }[]
-  >([]);
-  const toast = useToast();
+interface MapPosition {
+  lat: number;
+  lng: number;
+}
+
+// Custom hook for getting user's location
+const useGeoLocation = () => {
+  const [location, setLocation] = useState<MapPosition | null>(null);
 
   useEffect(() => {
-    // Get user's location
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation([
-            position.coords.latitude,
-            position.coords.longitude,
-          ]);
-        },
-        () => {
-          toast({
-            title: "Location Error",
-            description:
-              "Unable to retrieve your location. Using default location.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
           });
-          setUserLocation([51.505, -0.09]); // Default location (London)
+        },
+        (error) => {
+          console.error("Error getting location:", error);
         }
       );
-    } else {
-      toast({
-        title: "Geolocation not supported",
-        description:
-          "Your browser doesn't support geolocation. Using default location.",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
-      setUserLocation([51.505, -0.09]); // Default location (London)
     }
+  }, []);
 
-    // Fetch nearby chefs (This is a mock function, replace with actual API call)
-    fetchNearbyChefs();
+  return location;
+};
+
+// Component to recenter map
+const RecenterMap: React.FC<{ position: MapPosition }> = ({ position }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(position);
+  }, [position, map]);
+  return null;
+};
+
+// Main component
+const AdvancedChefMap: React.FC = () => {
+  const [chefs, setChefs] = useState<Chef[]>([]);
+  const [filteredChefs, setFilteredChefs] = useState<Chef[]>([]);
+  const [mapPosition, setMapPosition] = useState<MapPosition>({
+    lat: 51.505,
+    lng: -0.09,
+  });
+  const [searchRadius, setSearchRadius] = useState<number>(5); // km
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const userLocation = useGeoLocation();
+  const toast = useToast();
+
+  // Fetch chefs data
+  useEffect(() => {
+    const fetchChefs = async () => {
+      try {
+        // const response = await axios.get<Chef[]>("/api/chefs"); // Replace with your API endpoint
+        // setChefs(response.data);
+        setChefs([
+          {
+            id: "1",
+            name: "Chef 1",
+            categories: ["Italian", "Pasta"],
+            rating: 4.5,
+            price: 50,
+            location: [51.505, -0.09],
+          },
+          {
+            id: "2",
+            name: "Chef 2",
+            categories: ["Japanese", "Sushi"],
+            rating: 4.8,
+            price: 60,
+            location: [51.51, -0.1],
+          },
+          {
+            id: "3",
+            name: "Chef 3",
+            categories: ["Mexican", "Tacos"],
+            rating: 4.2,
+            price: 40,
+            location: [51.515, -0.095],
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching chefs:", error);
+        toast({
+          title: "Error fetching chefs",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+    fetchChefs();
   }, [toast]);
 
-  const fetchNearbyChefs = () => {
-    // Mock data - replace this with an actual API call
-    const mockChefs = [
-      {
-        id: 1,
-        name: "Chef Alice",
-        location: [51.51, -0.1],
-        rating: 4.8,
-        cuisine: "Italian",
-      },
-      {
-        id: 2,
-        name: "Chef Bob",
-        location: [51.49, -0.08],
-        rating: 4.6,
-        cuisine: "French",
-      },
-      {
-        id: 3,
-        name: "Chef Charlie",
-        location: [51.52, -0.11],
-        rating: 4.9,
-        cuisine: "Indian",
-      },
-    ];
-    setNearbyChefs(mockChefs);
+  // Filter chefs based on location, categories, and price
+  useEffect(() => {
+    const filtered = chefs.filter((chef) => {
+      const distance =
+        L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
+          L.latLng(chef.location[0], chef.location[1])
+        ) / 1000; // Convert to km
+      const categoryMatch =
+        selectedCategories.length === 0 ||
+        chef.categories.some((cat) => selectedCategories.includes(cat));
+      const priceMatch =
+        chef.price >= priceRange[0] && chef.price <= priceRange[1];
+      return distance <= searchRadius && categoryMatch && priceMatch;
+    });
+    setFilteredChefs(filtered);
+  }, [chefs, mapPosition, searchRadius, selectedCategories, priceRange]);
+
+  // Custom chef icon
+  const chefIcon = useMemo(
+    () =>
+      new L.Icon({
+        iconUrl: "/vite.svg", // Replace with your chef icon
+        iconSize: [38, 38],
+        iconAnchor: [19, 38],
+        popupAnchor: [0, -38],
+      }),
+    []
+  );
+
+  // Handle category selection
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
   };
 
-  if (!userLocation) {
-    return <Box>Loading map...</Box>;
-  }
+  // Handle using current location
+  const handleUseCurrentLocation = () => {
+    if (userLocation) {
+      setMapPosition(userLocation);
+      toast({
+        title: "Using your current location",
+        status: "success",
+        duration: 2000,
+      });
+    } else {
+      toast({
+        title: "Unable to get your location",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
 
   return (
-    <Flex direction={{ base: "column", md: "row" }} h="80vh">
-      <Box flex="1" mr={{ base: 0, md: 4 }} mb={{ base: 4, md: 0 }}>
-        <MapContainer
-          center={userLocation}
-          zoom={13}
-          style={{ height: "100%", width: "100%" }}
-          className="z-0"
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    <Box height="100vh" width="100%">
+      <Flex height="100%">
+        <VStack width="300px" p={4} bg="gray.50" overflowY="auto">
+          <Input
+            placeholder="Search location"
+            mb={2}
+            onChange={() => {
+              // Implement geocoding to convert address to coordinates
+              // Update mapPosition based on geocoding result
+            }}
           />
-          {nearbyChefs.map((chef) => (
-            <Marker
-              key={chef.id}
-              position={[chef.location[0], chef.location[1]]}
-              icon={chefIcon}
-            >
-              <Popup>
-                <Text fontWeight="bold">{chef.name}</Text>
-                <Text>Cuisine: {chef.cuisine}</Text>
-                <Text>Rating: {chef.rating}</Text>
-              </Popup>
-            </Marker>
-          ))}
-          {userLocation && (
-            <Marker position={userLocation} icon={chefIcon}>
-              <Popup>Your Location</Popup>
-            </Marker>
+          <Button onClick={handleUseCurrentLocation} mb={2}>
+            Use My Location
+          </Button>
+          <Input
+            type="number"
+            placeholder="Search radius (km)"
+            value={searchRadius}
+            onChange={(e) => setSearchRadius(Number(e.target.value))}
+            mb={2}
+          />
+          <Text fontWeight="bold" mb={2}>
+            Categories
+          </Text>
+          {Array.from(new Set(chefs.flatMap((chef) => chef.categories))).map(
+            (category) => (
+              <Button
+                key={category}
+                size="sm"
+                colorScheme={
+                  selectedCategories.includes(category) ? "blue" : "gray"
+                }
+                onClick={() => handleCategoryChange(category)}
+                mb={1}
+              >
+                {category}
+              </Button>
+            )
           )}
-        </MapContainer>
-      </Box>
-      <VStack flex="1" align="stretch" overflowY="auto">
-        <Heading size="lg" mb={4}>
-          Nearby Chefs
-        </Heading>
-        <List spacing={3}>
-          {nearbyChefs.map((chef) => (
-            <ListItem key={chef.id} p={3} borderWidth={1} borderRadius="md">
-              <Flex align="center">
-                <Avatar name={chef.name} mr={3} />
-                <Box>
+          <Text fontWeight="bold" mt={4} mb={2}>
+            Price Range
+          </Text>
+          <Flex width="100%">
+            <Input
+              type="number"
+              placeholder="Min"
+              value={priceRange[0]}
+              onChange={(e) =>
+                setPriceRange([Number(e.target.value), priceRange[1]])
+              }
+              mr={2}
+            />
+            <Input
+              type="number"
+              placeholder="Max"
+              value={priceRange[1]}
+              onChange={(e) =>
+                setPriceRange([priceRange[0], Number(e.target.value)])
+              }
+            />
+          </Flex>
+          <Text mt={4}>Found {filteredChefs.length} chefs</Text>
+        </VStack>
+        <Box flex={1}>
+          <MapContainer
+            center={mapPosition}
+            zoom={13}
+            style={{ height: "100%", width: "100%" }}
+            className="z-0"
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              className="z-0"
+            />
+            <RecenterMap position={mapPosition} />
+            {filteredChefs.map((chef) => (
+              <Marker key={chef.id} position={chef.location} icon={chefIcon}>
+                <Popup>
                   <Text fontWeight="bold">{chef.name}</Text>
-                  <Text fontSize="sm">Cuisine: {chef.cuisine}</Text>
-                  <Text fontSize="sm">Rating: {chef.rating}</Text>
-                </Box>
-              </Flex>
-            </ListItem>
-          ))}
-        </List>
-      </VStack>
-    </Flex>
+                  <Text>Categories: {chef.categories.join(", ")}</Text>
+                  <Text>Rating: {chef.rating}</Text>
+                  <Text>Price: ${chef.price}/hr</Text>
+                  <Button size="sm" colorScheme="blue" mt={2}>
+                    Book Now
+                  </Button>
+                </Popup>
+              </Marker>
+            ))}
+            {userLocation && (
+              <Marker
+                position={userLocation}
+                icon={L.icon({ iconUrl: "/vite.svg", iconSize: [38, 38] })}
+              >
+                <Popup>Your Location</Popup>
+              </Marker>
+            )}
+          </MapContainer>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 
-export default NearbyChefs;
+export default AdvancedChefMap;

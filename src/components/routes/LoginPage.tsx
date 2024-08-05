@@ -21,7 +21,7 @@ const LoginPage = () => {
     <Box minH="100vh" bg="gray.100" py={10}>
       <Container maxW="md" bg="white" boxShadow="md" rounded="lg" p={8}>
         <VStack spacing={4} align="flex-start" w="full">
-          <Heading>Login to Chef Cart</Heading>
+          <Heading>Login to Swaad Link</Heading>
           <form onSubmit={handleSubmit} style={{ width: "100%" }}>
             <VStack spacing={4} align="flex-start" w="full">
               <FormControl isRequired>

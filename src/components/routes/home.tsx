@@ -80,7 +80,7 @@ const Home = () => {
               mb={8}
               textShadow="2px 2px 4px rgba(0,0,0,0.4)"
             >
-              Chef Cart
+              Swaad Link
             </Heading>
           </Fade>
           <ScaleFade initialScale={0.9} in={true}>

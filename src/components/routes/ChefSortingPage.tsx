@@ -292,11 +292,11 @@ const ChefSortingPage = () => {
                 {selectedChef?.name} brings a world of flavors to your table.
               </Text>
               <Text fontWeight="bold">Price: ${selectedChef?.price}/hr</Text>
-              <Button colorScheme="orange" onClick={onClose}>
-                <Link to={`/chefs/${selectedChef?.id}`}>
+              <Link to={`/chefs/${selectedChef?.id}`}>
+                <Button colorScheme="orange" onClick={onClose}>
                   Book {selectedChef?.name}
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </VStack>
           </ModalBody>
         </ModalContent>

@@ -16,7 +16,7 @@ import "leaflet/dist/leaflet.css";
 
 // You'll need to add a chef icon image to your public folder
 const chefIcon = new Icon({
-  iconUrl: "/chef-icon.png",
+  iconUrl: "/vite.svg",
   iconSize: [38, 38],
 });
 
@@ -110,6 +110,7 @@ const NearbyChefs = () => {
           center={userLocation}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
+          className="z-0"
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -128,6 +129,11 @@ const NearbyChefs = () => {
               </Popup>
             </Marker>
           ))}
+          {userLocation && (
+            <Marker position={userLocation}>
+              <Popup>Your Location</Popup>
+            </Marker>
+          )}
         </MapContainer>
       </Box>
       <VStack flex="1" align="stretch" overflowY="auto">

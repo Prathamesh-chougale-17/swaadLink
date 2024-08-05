@@ -6,6 +6,7 @@ import ChefProfilePage from "./components/routes/ChefProfilePage";
 import { Box } from "@chakra-ui/react";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
+import NearbyChefs from "./components/map/NearbyMap";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
             <Route path="/chefs" element={<ChefSortingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/chefs/:id" element={<ChefProfilePage />} />
+            <Route path="/chef/nearme" element={<NearbyChefs />} />
           </Routes>
         </Router>
       </Box>

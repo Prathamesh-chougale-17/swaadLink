@@ -34,7 +34,7 @@ const NAV_ITEMS = [
       {
         label: "By Location",
         subLabel: "Find top chefs in your area",
-        href: "#",
+        href: "/chef/nearme",
       },
     ],
   },

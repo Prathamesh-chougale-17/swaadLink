@@ -84,17 +84,19 @@ export default function Navbar() {
           />
         </Flex>
         <Flex flex={{ base: 1 }} justify={{ base: "center", md: "start" }}>
-          <MotionBox whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Text
-              textAlign={useBreakpointValue({ base: "center", md: "left" })}
-              fontFamily={"heading"}
-              color={useColorModeValue("gray.800", "white")}
-              fontWeight="bold"
-              fontSize="xl"
-            >
-              Swaad Link
-            </Text>
-          </MotionBox>
+          <Link href="/">
+            <MotionBox whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Text
+                textAlign={useBreakpointValue({ base: "center", md: "left" })}
+                fontFamily={"heading"}
+                color={useColorModeValue("gray.800", "white")}
+                fontWeight="bold"
+                fontSize="xl"
+              >
+                Swaad Link
+              </Text>
+            </MotionBox>
+          </Link>
 
           <Flex display={{ base: "none", md: "flex" }} ml={10}>
             <DesktopNav />

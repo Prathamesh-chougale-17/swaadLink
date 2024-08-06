@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -10,7 +10,6 @@ import {
   Image,
   Badge,
   Button,
-  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -31,79 +30,164 @@ import {
   StatHelpText,
   Divider,
   useColorModeValue,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  Textarea,
+  SliderThumb,
+  Input,
+  Avatar,
+  IconButton,
+  useToast,
 } from "@chakra-ui/react";
 import { StarIcon, ChatIcon, CalendarIcon } from "@chakra-ui/icons";
-// import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
-// const MotionBox = motion(Box);
+const MotionBox = motion(Box);
 
-interface ChefData {
+interface Chef {
   id: string;
   name: string;
   image: string;
   coverImage: string;
   categories: string[];
   price: number;
-  monthlyFare: number;
-  trialCharges: number;
   location: string;
   rating: number;
-  totalReviews: number;
   bio: string;
   specialDishes: string[];
+  languages: string[];
   awards: string[];
   experience: number;
-  languages: string[];
+  monthlyFare: number;
+  trialCharges: number;
+  dynamicPricing: (people: number) => number;
+  status: "active" | "unavailable";
   availability: {
-    status: "available" | "unavailable";
-    nextAvailable?: string;
+    [key: string]: string[];
   };
   bookings: number;
   satisfactionRate: number;
+  totalReviews: number;
+}
+interface Comment {
+  id: number;
+  user: string;
+  rating: number;
+  text: string;
+  date: string;
 }
 
-const chef: ChefData = {
-  id: "1",
-  name: "Chef Amit Kumar",
-  image: "/chef.jpg",
-  coverImage: "/kitchen-background.jpg",
-  categories: ["North Indian", "Mughlai", "Continental"],
-  price: 800,
-  monthlyFare: 15000,
-  trialCharges: 1000,
-  location: "Mumbai, India",
-  rating: 4.8,
-  totalReviews: 127,
-  bio: "With over 15 years of culinary experience, Chef Amit Kumar brings the rich flavors of North India and the finesse of Continental cuisine to your table. His innovative fusion dishes have earned him acclaim in Mumbai's competitive food scene.",
-  specialDishes: ["Butter Chicken", "Rogan Josh", "Truffle Risotto"],
-  awards: ["Best Chef of the Year 2020", "Culinary Innovation Award 2019"],
-  experience: 15,
-  languages: ["Hindi", "English", "Marathi"],
-  availability: {
-    status: "available",
-  },
-  bookings: 250,
-  satisfactionRate: 98,
-};
-
 const ChefProfilePage: React.FC = () => {
-  const [guestCount, setGuestCount] = useState(1);
-  const {
-    isOpen: isNegotiateOpen,
-    onOpen: onNegotiateOpen,
-    onClose: onNegotiateClose,
-  } = useDisclosure();
-  const {
-    isOpen: isChatOpen,
-    onOpen: onChatOpen,
-    onClose: onChatClose,
-  } = useDisclosure();
-
   const bgColor = useColorModeValue("white", "gray.800");
   // const textColor = useColorModeValue("gray.800", "white");
 
   const calculateDynamicPrice = (basePrice: number, guests: number) => {
     return basePrice + (guests - 1) * 100;
+  };
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isNegotiating, setIsNegotiating] = useState(false);
+  const [isChatting, setIsChatting] = useState(false);
+  const [guestCount, setGuestCount] = useState(1);
+  const [negotiatedPrice, setNegotiatedPrice] = useState(0);
+  const toast = useToast();
+  const cardBgColor = useColorModeValue("white", "gray.700");
+
+  const chef: Chef = {
+    id: "1",
+    name: "Chef Amit Kumar",
+    image: "/chef.jpg",
+    categories: ["North Indian", "Mughlai", "Continental"],
+    price: 800,
+    location: "Mumbai, India",
+    rating: 4.8,
+    bio: "With over 15 years of culinary experience, Chef Amit Kumar brings the rich flavors of North India and the finesse of Continental cuisine to your table. His innovative fusion dishes have earned him acclaim in Mumbai's competitive food scene.",
+    specialDishes: ["Butter Chicken", "Rogan Josh", "Truffle Risotto"],
+    awards: ["Best Chef of the Year 2020", "Culinary Innovation Award 2019"],
+    monthlyFare: 15000,
+    trialCharges: 1000,
+    dynamicPricing: (people: number) => 800 + people * 100,
+    experience: 15,
+    status: "active",
+    availability: {
+      Monday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+      Tuesday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+      Wednesday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+      Thursday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+      Friday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+      Saturday: ["11:00 AM - 3:00 PM", "7:00 PM - 11:00 PM"],
+      Sunday: ["11:00 AM - 3:00 PM", "7:00 PM - 11:00 PM"],
+    },
+    bookings: 250,
+    satisfactionRate: 98,
+    totalReviews: 127,
+    languages: ["Hindi", "English", "Marathi"],
+    coverImage: "/kitchen-background.jpg",
+  };
+
+  useEffect(() => {
+    // Mock API call to fetch comments
+    setComments([
+      {
+        id: 1,
+        user: "Priya S.",
+        rating: 5,
+        text: "Amazing experience! Chef Amit's butter chicken is to die for.",
+        date: "2023-05-15",
+      },
+      {
+        id: 2,
+        user: "Rahul M.",
+        rating: 4,
+        text: "Great fusion of flavors. Loved the truffle risotto.",
+        date: "2023-05-10",
+      },
+    ]);
+  }, []);
+
+  const handleRating = (newRating: number) => {
+    setRating(newRating);
+  };
+
+  const handleCommentSubmit = () => {
+    if (rating === 0) {
+      toast({
+        title: "Rating required",
+        description: "Please provide a rating before submitting your comment.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    const newComment = {
+      id: comments.length + 1,
+      user: "You",
+      rating,
+      text: comment,
+      date: new Date().toISOString().split("T")[0],
+    };
+    setComments([newComment, ...comments]);
+    setComment("");
+    setRating(0);
+    toast({
+      title: "Comment submitted",
+      description: "Thank you for your feedback!",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  const handleNegotiate = () => {
+    setIsNegotiating(true);
+    setNegotiatedPrice(chef.price);
+  };
+
+  const handleChat = () => {
+    setIsChatting(true);
   };
 
   return (
@@ -149,19 +233,15 @@ const ChefProfilePage: React.FC = () => {
             </VStack>
             <VStack align="end">
               <Badge
-                colorScheme={
-                  chef.availability.status === "available" ? "green" : "red"
-                }
+                colorScheme={chef.status === "active" ? "green" : "red"}
                 fontSize="lg"
                 px={3}
                 py={1}
                 borderRadius="full"
               >
-                {chef.availability.status === "available"
-                  ? "Available Now"
-                  : "Unavailable"}
+                {chef.status === "active" ? "Available Now" : "Unavailable"}
               </Badge>
-              {chef.availability.status === "unavailable" &&
+              {chef.status === "unavailable" &&
                 chef.availability.nextAvailable && (
                   <Text fontSize="sm" color="gray.500">
                     Next available: {chef.availability.nextAvailable}
@@ -308,14 +388,14 @@ const ChefProfilePage: React.FC = () => {
                     colorScheme="green"
                     leftIcon={<ChatIcon />}
                     w="full"
-                    onClick={onChatOpen}
+                    onClick={handleChat}
                   >
                     Chat with Chef
                   </Button>
                   <Button
                     colorScheme="orange"
                     w="full"
-                    onClick={onNegotiateOpen}
+                    onClick={handleNegotiate}
                   >
                     Negotiate Price
                   </Button>
@@ -325,28 +405,106 @@ const ChefProfilePage: React.FC = () => {
           </SimpleGrid>
 
           <Box>
-            <Heading as="h3" size="lg" mb={4}>
-              Recent Reviews
+            <Heading as="h2" size="xl" mb={6}>
+              Customer Reviews
             </Heading>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              {/* Add review components here */}
-            </SimpleGrid>
+
+            <Box mb={8}>
+              <Heading as="h3" size="lg" mb={4}>
+                Leave a Review
+              </Heading>
+              <HStack spacing={2} mb={4}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <IconButton
+                    key={star}
+                    icon={<StarIcon />}
+                    onClick={() => handleRating(star)}
+                    color={star <= rating ? "yellow.400" : "gray.300"}
+                    aria-label={`Rate ${star} stars`}
+                  />
+                ))}
+              </HStack>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Share your experience with Chef Amit Kumar..."
+                mb={4}
+              />
+              <Button colorScheme="blue" onClick={handleCommentSubmit}>
+                Submit Review
+              </Button>
+            </Box>
+
+            <VStack spacing={4} align="stretch">
+              <AnimatePresence>
+                {comments.map((comment) => (
+                  <MotionBox
+                    key={comment.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Box
+                      borderWidth={1}
+                      borderRadius="lg"
+                      p={4}
+                      bg={cardBgColor}
+                      boxShadow="md"
+                    >
+                      <Flex justify="space-between" mb={2}>
+                        <HStack>
+                          <Avatar size="sm" name={comment.user} />
+                          <Text fontWeight="bold">{comment.user}</Text>
+                        </HStack>
+                        <HStack>
+                          <StarIcon color="yellow.400" />
+                          <Text>{comment.rating}/5</Text>
+                        </HStack>
+                      </Flex>
+                      <Text mb={2}>{comment.text}</Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {comment.date}
+                      </Text>
+                    </Box>
+                  </MotionBox>
+                ))}
+              </AnimatePresence>
+            </VStack>
           </Box>
         </VStack>
       </Container>
 
       {/* Negotiate Modal */}
-      <Modal isOpen={isNegotiateOpen} onClose={onNegotiateClose}>
+      <Modal isOpen={isNegotiating} onClose={() => setIsNegotiating(false)}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Negotiate Price</ModalHeader>
+          <ModalHeader>Negotiate Price with {chef.name}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>{/* Add negotiation form or content here */}</ModalBody>
+          <ModalBody>
+            <VStack spacing={4}>
+              <Text>Current price: ${chef.price}/hr</Text>
+              <Text>Your offer: ${negotiatedPrice}/hr</Text>
+              <Slider
+                min={Math.floor(chef.price * 0.7)}
+                max={Math.ceil(chef.price * 1.3)}
+                step={10}
+                value={negotiatedPrice}
+                onChange={(value) => setNegotiatedPrice(value)}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
+              <Textarea placeholder="Add a message to support your offer (optional)" />
+            </VStack>
+          </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onNegotiateClose}>
-              Submit Offer
+            <Button colorScheme="blue" mr={3}>
+              Send Offer
             </Button>
-            <Button variant="ghost" onClick={onNegotiateClose}>
+            <Button variant="ghost" onClick={() => setIsNegotiating(false)}>
               Cancel
             </Button>
           </ModalFooter>
@@ -354,12 +512,27 @@ const ChefProfilePage: React.FC = () => {
       </Modal>
 
       {/* Chat Modal */}
-      <Modal isOpen={isChatOpen} onClose={onChatClose} size="xl">
+      <Modal isOpen={isChatting} onClose={() => setIsChatting(false)}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Chat with {chef.name}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>{/* Add chat interface here */}</ModalBody>
+          <ModalBody>
+            <VStack spacing={4} align="stretch" h="300px" overflowY="auto">
+              {/* Mock chat messages */}
+              <Box alignSelf="flex-end" bg="blue.100" p={2} borderRadius="md">
+                Hello, I'm interested in booking you for an event.
+              </Box>
+              <Box alignSelf="flex-start" bg="gray.100" p={2} borderRadius="md">
+                Hi there! I'd be happy to discuss your event. What kind of
+                cuisine are you looking for?
+              </Box>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Input placeholder="Type your message..." mr={3} />
+            <Button colorScheme="blue">Send</Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </Box>

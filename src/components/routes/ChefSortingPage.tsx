@@ -264,6 +264,8 @@ const ChefSortingPage: React.FC = () => {
           return (
             new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
           );
+        case "price":
+          return a.price - b.price;
         default:
           return 0;
       }
@@ -341,6 +343,7 @@ const ChefSortingPage: React.FC = () => {
               <option value="distance">Distance</option>
               <option value="stars">Rating</option>
               <option value="recent">Recently Joined</option>
+              <option value="price">Price</option>
             </Select>
           </Box>
         </SimpleGrid>

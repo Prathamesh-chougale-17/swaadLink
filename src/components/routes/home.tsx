@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
+import * as _chakra_ui_system from "@chakra-ui/system";
+import * as _chakra_ui_icon from "@chakra-ui/icon";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Button,
@@ -8,57 +11,43 @@ import {
   SimpleGrid,
   Text,
   VStack,
-  Image,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  Fade,
-  ScaleFade,
-  SlideFade,
-  Wrap,
-  WrapItem,
-  Badge,
+  useColorModeValue,
+  InputGroup,
+  InputLeftElement,
+  Icon,
+  Link,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
+import { SearchIcon, StarIcon, TimeIcon, ChatIcon } from "@chakra-ui/icons";
+import { FaUtensils } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const categories = [
-  "Maharashtrian",
-  "North Indian",
-  "South Indian",
-  "Bengali",
-  "Chinese",
-  "Thai",
-  "Turkish",
-  "Mediterranean",
-  "Italian",
-  "French",
-  "Mexican",
-  "Spanish",
+  { name: "Maharashtrian", icon: FaUtensils },
+  { name: "North Indian", icon: FaUtensils },
+  { name: "South Indian", icon: FaUtensils },
+  { name: "Bengali", icon: FaUtensils },
+  { name: "Chinese", icon: FaUtensils },
+  { name: "Thai", icon: FaUtensils },
+  { name: "Turkish", icon: FaUtensils },
+  { name: "Mediterranean", icon: FaUtensils },
+  { name: "Italian", icon: FaUtensils },
+  { name: "French", icon: FaUtensils },
+  { name: "Mexican", icon: FaUtensils },
+  { name: "Spanish", icon: FaUtensils },
 ];
 
-const Home = () => {
+const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  useEffect(() => {
-    if (selectedCategory) {
-      onOpen();
-    }
-  }, [selectedCategory, onOpen]);
+  const bgColor = useColorModeValue("orange.50", "gray.900");
+  const cardBgColor = useColorModeValue("white", "gray.800");
 
   return (
-    <Box minH="100vh" bgGradient="linear(to-b, orange.100, orange.300)">
+    <Box minH="100vh" bg={bgColor}>
       <Box
-        h="70vh"
-        bgImage="url('/chef.jpg')"
+        h="80vh"
+        bgImage="url('/hero-image.jpg')"
         bgPosition="center"
         bgSize="cover"
         position="relative"
@@ -72,135 +61,151 @@ const Home = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <Fade in={true}>
+          <VStack
+            spacing={8}
+            alignItems="center"
+            maxW="800px"
+            textAlign="center"
+          >
             <Heading
               as="h1"
-              size="2xl"
+              size="4xl"
               color="white"
-              mb={8}
               textShadow="2px 2px 4px rgba(0,0,0,0.4)"
+              fontWeight="bold"
             >
               Swaad Link
             </Heading>
-          </Fade>
-          <ScaleFade initialScale={0.9} in={true}>
+            <Text fontSize="2xl" color="white" fontWeight="medium">
+              Discover extraordinary chefs for your culinary adventures
+            </Text>
             <Box w="full" maxW="md" px={4}>
-              <Box position="relative">
+              <InputGroup size="lg">
+                <InputLeftElement pointerEvents="none">
+                  <SearchIcon color="gray.300" />
+                </InputLeftElement>
                 <Input
                   placeholder="Search by location, chef name, or cuisine"
                   bg="white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  pr="4rem"
                   borderRadius="full"
-                  fontSize="lg"
                   _focus={{
                     boxShadow: "0 0 0 3px rgba(66, 153, 225, 0.6)",
                     borderColor: "blue.300",
                   }}
                 />
-                <SearchIcon
-                  position="absolute"
-                  right="1.5rem"
-                  top="50%"
-                  transform="translateY(-50%)"
-                  color="gray.400"
-                  w={5}
-                  h={5}
-                />
-              </Box>
+              </InputGroup>
             </Box>
-          </ScaleFade>
+            <Button
+              as={RouterLink}
+              to="/chefs"
+              size="lg"
+              colorScheme="orange"
+              rightIcon={<SearchIcon />}
+              borderRadius="full"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+            >
+              Find Your Chef
+            </Button>
+          </VStack>
         </Box>
       </Box>
 
       <Container maxW="container.xl" py={16}>
-        <SlideFade in={true} offsetY="20px">
-          <Heading as="h2" size="xl" textAlign="center" mb={8}>
+        <VStack spacing={12}>
+          <Heading as="h2" size="2xl" textAlign="center">
             Explore Culinary Adventures
           </Heading>
-        </SlideFade>
-        <SimpleGrid columns={[2, 3, 4, 6]} spacing={6}>
-          {categories.map((category, index) => (
-            <MotionBox
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                variant="outline"
-                height="auto"
-                py={6}
-                px={4}
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                bg="white"
-                borderRadius="lg"
-                boxShadow="md"
-                transition="all 0.3s"
-                onClick={() => setSelectedCategory(category)}
-                _hover={{
-                  bg: "orange.50",
-                  boxShadow: "lg",
-                }}
-              >
-                <Image
-                  src={`/chef.jpg`}
-                  alt={category}
-                  boxSize="16"
-                  borderRadius="full"
-                  mb={3}
-                />
-                <Text fontWeight="medium" fontSize="lg">
-                  {category}
-                </Text>
-              </Button>
-            </MotionBox>
-          ))}
-        </SimpleGrid>
+          <SimpleGrid columns={[2, 3, 4, 6]} spacing={8}>
+            <AnimatePresence>
+              {categories.map((category, index) => (
+                <MotionBox
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <Link
+                    as={RouterLink}
+                    to={`/chefs?category=${category.name}`}
+                    _hover={{ textDecoration: "none" }}
+                  >
+                    <VStack
+                      bg={cardBgColor}
+                      p={6}
+                      borderRadius="lg"
+                      boxShadow="md"
+                      transition="all 0.3s"
+                      _hover={{
+                        transform: "translateY(-5px)",
+                        boxShadow: "xl",
+                      }}
+                      cursor="pointer"
+                    >
+                      <Icon
+                        as={category.icon}
+                        w={10}
+                        h={10}
+                        color="orange.500"
+                      />
+                      <Text fontWeight="medium" fontSize="lg">
+                        {category.name}
+                      </Text>
+                    </VStack>
+                  </Link>
+                </MotionBox>
+              ))}
+            </AnimatePresence>
+          </SimpleGrid>
+        </VStack>
       </Container>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{selectedCategory} Cuisine</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <Text>
-                Discover talented chefs specializing in {selectedCategory}{" "}
-                cuisine and more!
-              </Text>
-              <Text>
-                Many of our chefs are experts in multiple cuisines, bringing you
-                a world of flavors.
-              </Text>
-              <Wrap spacing={2}>
-                <WrapItem>
-                  <Badge colorScheme="purple">{selectedCategory}</Badge>
-                </WrapItem>
-                {categories
-                  .filter((cat) => cat !== selectedCategory)
-                  .slice(0, 3)
-                  .map((cat) => (
-                    <WrapItem key={cat}>
-                      <Badge>{cat}</Badge>
-                    </WrapItem>
-                  ))}
-                <WrapItem>
-                  <Badge>+{categories.length - 4} more</Badge>
-                </WrapItem>
-              </Wrap>
-              <Button colorScheme="orange" onClick={onClose}>
-                Explore {selectedCategory} Chefs
-              </Button>
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      <Box bg={useColorModeValue("gray.100", "gray.700")} py={16}>
+        <Container maxW="container.xl">
+          <SimpleGrid columns={[1, null, 3]} spacing={10}>
+            <FeatureCard
+              icon={StarIcon}
+              title="Top-rated Chefs"
+              description="Connect with the best culinary talents in your area."
+            />
+            <FeatureCard
+              icon={TimeIcon}
+              title="Flexible Bookings"
+              description="Choose from one-time events to regular meal preparations."
+            />
+            <FeatureCard
+              icon={ChatIcon}
+              title="Direct Communication"
+              description="Chat with chefs to customize your perfect dining experience."
+            />
+          </SimpleGrid>
+        </Container>
+      </Box>
     </Box>
   );
 };
+
+const FeatureCard: React.FC<{
+  icon: _chakra_ui_system.ComponentWithAs<"svg", _chakra_ui_icon.IconProps>;
+  title: string;
+  description: string;
+}> = ({ icon, title, description }) => (
+  <VStack
+    bg={useColorModeValue("white", "gray.800")}
+    p={8}
+    borderRadius="lg"
+    boxShadow="md"
+    align="start"
+    spacing={4}
+  >
+    <Icon as={icon} w={10} h={10} color="orange.500" />
+    <Heading as="h3" size="lg">
+      {title}
+    </Heading>
+    <Text>{description}</Text>
+  </VStack>
+);
 
 export default Home;

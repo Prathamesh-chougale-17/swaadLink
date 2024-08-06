@@ -33,6 +33,7 @@ import {
   InputGroup,
   InputLeftElement,
   useToast,
+  Link,
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchIcon } from "@chakra-ui/icons";
@@ -518,9 +519,11 @@ const ChefSortingPage: React.FC = () => {
                   </Text>
                 </Flex>
               </Stack>
-              <Button colorScheme="orange" onClick={onClose}>
-                Book {selectedChef?.name}
-              </Button>
+              <Link href={`/chefs/${selectedChef?.id}`} width={"max-content"}>
+                <Button colorScheme="orange" onClick={onClose}>
+                  Book {selectedChef?.name}
+                </Button>
+              </Link>
             </VStack>
           </ModalBody>
         </ModalContent>

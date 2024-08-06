@@ -1,256 +1,368 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Container,
+  Flex,
+  VStack,
+  HStack,
   Heading,
   Text,
   Image,
-  VStack,
-  HStack,
   Badge,
   Button,
-  Textarea,
-  Flex,
-  Avatar,
-  Wrap,
-  WrapItem,
-  useToast,
-  Divider,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
   SimpleGrid,
-  IconButton,
+  Progress,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  Divider,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { StarIcon, PhoneIcon, EmailIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
+import { StarIcon, ChatIcon, CalendarIcon } from "@chakra-ui/icons";
+// import { AnimatePresence, motion } from "framer-motion";
 
-const MotionBox = motion(Box);
+// const MotionBox = motion(Box);
 
-interface CommentsProps {
-  id: number;
-  user: string;
+interface ChefData {
+  id: string;
+  name: string;
+  image: string;
+  coverImage: string;
+  categories: string[];
+  price: number;
+  monthlyFare: number;
+  trialCharges: number;
+  location: string;
   rating: number;
-  text: string;
-  date: string;
+  totalReviews: number;
+  bio: string;
+  specialDishes: string[];
+  awards: string[];
+  experience: number;
+  languages: string[];
+  availability: {
+    status: "available" | "unavailable";
+    nextAvailable?: string;
+  };
+  bookings: number;
+  satisfactionRate: number;
 }
 
-const ChefProfilePage = () => {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState<CommentsProps[]>([]);
-  const toast = useToast();
-  //   const bgColor = useColorModeValue("gray.50", "gray.800");
-  const cardBgColor = useColorModeValue("white", "gray.700");
+const chef: ChefData = {
+  id: "1",
+  name: "Chef Amit Kumar",
+  image: "/chef.jpg",
+  coverImage: "/kitchen-background.jpg",
+  categories: ["North Indian", "Mughlai", "Continental"],
+  price: 800,
+  monthlyFare: 15000,
+  trialCharges: 1000,
+  location: "Mumbai, India",
+  rating: 4.8,
+  totalReviews: 127,
+  bio: "With over 15 years of culinary experience, Chef Amit Kumar brings the rich flavors of North India and the finesse of Continental cuisine to your table. His innovative fusion dishes have earned him acclaim in Mumbai's competitive food scene.",
+  specialDishes: ["Butter Chicken", "Rogan Josh", "Truffle Risotto"],
+  awards: ["Best Chef of the Year 2020", "Culinary Innovation Award 2019"],
+  experience: 15,
+  languages: ["Hindi", "English", "Marathi"],
+  availability: {
+    status: "available",
+  },
+  bookings: 250,
+  satisfactionRate: 98,
+};
 
-  // Mock chef data
-  const chefs = {
-    id: "1",
-    name: "Chef Amit Kumar",
-    image: "/chef.jpg",
-    categories: ["North Indian", "Mughlai", "Continental"],
-    price: 800,
-    location: "Mumbai, India",
-    rating: 4.8,
-    bio: "With over 15 years of culinary experience, Chef Amit Kumar brings the rich flavors of North India and the finesse of Continental cuisine to your table. His innovative fusion dishes have earned him acclaim in Mumbai's competitive food scene.",
-    specialDishes: ["Butter Chicken", "Rogan Josh", "Truffle Risotto"],
-    awards: ["Best Chef of the Year 2020", "Culinary Innovation Award 2019"],
-  };
+const ChefProfilePage: React.FC = () => {
+  const [guestCount, setGuestCount] = useState(1);
+  const {
+    isOpen: isNegotiateOpen,
+    onOpen: onNegotiateOpen,
+    onClose: onNegotiateClose,
+  } = useDisclosure();
+  const {
+    isOpen: isChatOpen,
+    onOpen: onChatOpen,
+    onClose: onChatClose,
+  } = useDisclosure();
 
-  useEffect(() => {
-    // Mock API call to fetch comments
-    setComments([
-      {
-        id: 1,
-        user: "Priya S.",
-        rating: 5,
-        text: "Amazing experience! Chef Amit's butter chicken is to die for.",
-        date: "2023-05-15",
-      },
-      {
-        id: 2,
-        user: "Rahul M.",
-        rating: 4,
-        text: "Great fusion of flavors. Loved the truffle risotto.",
-        date: "2023-05-10",
-      },
-    ]);
-  }, []);
+  const bgColor = useColorModeValue("white", "gray.800");
+  // const textColor = useColorModeValue("gray.800", "white");
 
-  const handleRating = (newRating: React.SetStateAction<number>) => {
-    setRating(newRating);
-  };
-
-  const handleCommentSubmit = () => {
-    if (rating === 0) {
-      toast({
-        title: "Rating required",
-        description: "Please provide a rating before submitting your comment.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    const newComment = {
-      id: comments.length + 1,
-      user: "You",
-      rating,
-      text: comment,
-      date: new Date().toISOString().split("T")[0],
-    };
-    setComments([newComment, ...comments]);
-    setComment("");
-    setRating(0);
-    toast({
-      title: "Comment submitted",
-      description: "Thank you for your feedback!",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+  const calculateDynamicPrice = (basePrice: number, guests: number) => {
+    return basePrice + (guests - 1) * 100;
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <MotionBox
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+    <Box bg={useColorModeValue("gray.50", "gray.900")}>
+      <Box
+        h="300px"
+        bgImage={`url(${chef.coverImage})`}
+        bgPosition="center"
+        bgSize="cover"
+        position="relative"
       >
-        <Flex direction={{ base: "column", md: "row" }} align="start" mb={8}>
+        <Box
+          position="absolute"
+          bottom="-50px"
+          left="50%"
+          transform="translateX(-50%)"
+        >
           <Image
-            src={chefs.image}
-            alt={chefs.name}
-            borderRadius="lg"
+            src={chef.image}
+            alt={chef.name}
+            boxSize="150px"
             objectFit="cover"
-            maxW={{ base: "100%", md: "300px" }}
-            mr={{ md: 8 }}
-            mb={{ base: 4, md: 0 }}
+            borderRadius="full"
+            border="4px solid white"
           />
-          <Box>
-            <Heading as="h1" size="2xl" mb={2}>
-              {chefs.name}
-            </Heading>
-            <Wrap spacing={2} mb={4}>
-              {chefs.categories.map((category) => (
-                <WrapItem key={category}>
-                  <Badge colorScheme="purple">{category}</Badge>
-                </WrapItem>
-              ))}
-            </Wrap>
-            <HStack spacing={4} mb={4}>
+        </Box>
+      </Box>
+
+      <Container maxW="container.xl" pt="70px" pb="50px">
+        <VStack spacing={6} align="stretch">
+          <Flex justifyContent="space-between" alignItems="center">
+            <VStack align="start" spacing={2}>
+              <Heading as="h1" size="2xl">
+                {chef.name}
+              </Heading>
+              <HStack>
+                {chef.categories.map((category) => (
+                  <Badge key={category} colorScheme="purple">
+                    {category}
+                  </Badge>
+                ))}
+              </HStack>
+            </VStack>
+            <VStack align="end">
               <Badge
-                colorScheme="green"
-                fontSize="md"
-                p={2}
+                colorScheme={
+                  chef.availability.status === "available" ? "green" : "red"
+                }
+                fontSize="lg"
+                px={3}
+                py={1}
                 borderRadius="full"
               >
-                ⭐ {chefs.rating.toFixed(1)}
+                {chef.availability.status === "available"
+                  ? "Available Now"
+                  : "Unavailable"}
               </Badge>
-              <Text fontWeight="bold">${chefs.price}/hr</Text>
-              <Text>{chefs.location}</Text>
-            </HStack>
-            <Text mb={4}>{chefs.bio}</Text>
-            <HStack spacing={4}>
-              <Button leftIcon={<PhoneIcon />} colorScheme="blue">
-                Contact
-              </Button>
-              <Button leftIcon={<EmailIcon />} colorScheme="green">
-                Book Now
-              </Button>
-            </HStack>
-          </Box>
-        </Flex>
-
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} mb={8}>
-          <Box>
-            <Heading as="h2" size="lg" mb={4}>
-              Specialties
-            </Heading>
-            <VStack align="start" spacing={2}>
-              {chefs.specialDishes.map((dish) => (
-                <Text key={dish}>• {dish}</Text>
-              ))}
+              {chef.availability.status === "unavailable" &&
+                chef.availability.nextAvailable && (
+                  <Text fontSize="sm" color="gray.500">
+                    Next available: {chef.availability.nextAvailable}
+                  </Text>
+                )}
             </VStack>
-          </Box>
-          <Box>
-            <Heading as="h2" size="lg" mb={4}>
-              Awards & Recognitions
-            </Heading>
-            <VStack align="start" spacing={2}>
-              {chefs.awards.map((award) => (
-                <Text key={award}>🏆 {award}</Text>
-              ))}
-            </VStack>
-          </Box>
-        </SimpleGrid>
+          </Flex>
 
-        <Divider my={8} />
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
+            <Box>
+              <Tabs isFitted variant="enclosed">
+                <TabList mb="1em">
+                  <Tab>About</Tab>
+                  <Tab>Experience</Tab>
+                  <Tab>Pricing</Tab>
+                </TabList>
+                <TabPanels>
+                  <TabPanel>
+                    <Text>{chef.bio}</Text>
+                  </TabPanel>
+                  <TabPanel>
+                    <VStack align="start" spacing={4}>
+                      <Text>
+                        <strong>Years of Experience:</strong> {chef.experience}
+                      </Text>
+                      <Text>
+                        <strong>Languages:</strong> {chef.languages.join(", ")}
+                      </Text>
+                      <Text>
+                        <strong>Special Dishes:</strong>
+                      </Text>
+                      <SimpleGrid columns={2} spacing={2}>
+                        {chef.specialDishes.map((dish) => (
+                          <Badge key={dish} colorScheme="green">
+                            {dish}
+                          </Badge>
+                        ))}
+                      </SimpleGrid>
+                      <Text>
+                        <strong>Awards & Recognitions:</strong>
+                      </Text>
+                      <VStack align="start" spacing={1}>
+                        {chef.awards.map((award) => (
+                          <Text key={award}>🏆 {award}</Text>
+                        ))}
+                      </VStack>
+                    </VStack>
+                  </TabPanel>
+                  <TabPanel>
+                    <VStack align="start" spacing={4}>
+                      <Stat>
+                        <StatLabel>Hourly Rate</StatLabel>
+                        <StatNumber>${chef.price}/hr</StatNumber>
+                        <StatHelpText>
+                          Base price for up to 4 guests
+                        </StatHelpText>
+                      </Stat>
+                      <Stat>
+                        <StatLabel>Monthly Package</StatLabel>
+                        <StatNumber>${chef.monthlyFare}/month</StatNumber>
+                        <StatHelpText>
+                          Includes 20 meals for a family of 4
+                        </StatHelpText>
+                      </Stat>
+                      <Stat>
+                        <StatLabel>Trial Session</StatLabel>
+                        <StatNumber>${chef.trialCharges}</StatNumber>
+                        <StatHelpText>
+                          3-hour session for up to 4 guests
+                        </StatHelpText>
+                      </Stat>
+                      <Box>
+                        <Text fontWeight="bold" mb={2}>
+                          Dynamic Pricing
+                        </Text>
+                        <HStack>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              setGuestCount(Math.max(1, guestCount - 1))
+                            }
+                          >
+                            -
+                          </Button>
+                          <Text>{guestCount} guests</Text>
+                          <Button
+                            size="sm"
+                            onClick={() => setGuestCount(guestCount + 1)}
+                          >
+                            +
+                          </Button>
+                        </HStack>
+                        <Text mt={2}>
+                          Price for {guestCount} guests: $
+                          {calculateDynamicPrice(chef.price, guestCount)}/hr
+                        </Text>
+                      </Box>
+                    </VStack>
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+            </Box>
 
-        <Heading as="h2" size="xl" mb={6}>
-          Customer Reviews
-        </Heading>
-
-        <Box mb={8}>
-          <Heading as="h3" size="lg" mb={4}>
-            Leave a Review
-          </Heading>
-          <HStack spacing={2} mb={4}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <IconButton
-                key={star}
-                icon={<StarIcon />}
-                onClick={() => handleRating(star)}
-                color={star <= rating ? "yellow.400" : "gray.300"}
-                aria-label={`Rate ${star} stars`}
-              />
-            ))}
-          </HStack>
-          <Textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Share your experience with Chef Amit Kumar..."
-            mb={4}
-          />
-          <Button colorScheme="blue" onClick={handleCommentSubmit}>
-            Submit Review
-          </Button>
-        </Box>
-
-        <VStack spacing={4} align="stretch">
-          {comments.map((comment) => (
-            <MotionBox
-              key={comment.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Box
-                borderWidth={1}
-                borderRadius="lg"
-                p={4}
-                bg={cardBgColor}
-                boxShadow="md"
-              >
-                <Flex justify="space-between" mb={2}>
-                  <HStack>
-                    <Avatar size="sm" name={comment.user} />
-                    <Text fontWeight="bold">{comment.user}</Text>
-                  </HStack>
+            <Box bg={bgColor} p={6} borderRadius="lg" boxShadow="md">
+              <VStack spacing={6} align="stretch">
+                <Flex justifyContent="space-between" alignItems="center">
                   <HStack>
                     <StarIcon color="yellow.400" />
-                    <Text>{comment.rating}/5</Text>
+                    <Text fontWeight="bold" fontSize="xl">
+                      {chef.rating}
+                    </Text>
+                    <Text color="gray.500">({chef.totalReviews} reviews)</Text>
                   </HStack>
+                  <Text fontWeight="bold">{chef.location}</Text>
                 </Flex>
-                <Text mb={2}>{comment.text}</Text>
-                <Text fontSize="sm" color="gray.500">
-                  {comment.date}
-                </Text>
-              </Box>
-            </MotionBox>
-          ))}
+
+                <VStack spacing={2} align="stretch">
+                  <Flex justifyContent="space-between">
+                    <Text>Total Bookings</Text>
+                    <Text fontWeight="bold">{chef.bookings}</Text>
+                  </Flex>
+                  <Flex justifyContent="space-between">
+                    <Text>Satisfaction Rate</Text>
+                    <Text fontWeight="bold">{chef.satisfactionRate}%</Text>
+                  </Flex>
+                  <Progress
+                    value={chef.satisfactionRate}
+                    colorScheme="green"
+                    size="sm"
+                  />
+                </VStack>
+
+                <Divider />
+
+                <VStack spacing={4}>
+                  <Button
+                    colorScheme="blue"
+                    leftIcon={<CalendarIcon />}
+                    w="full"
+                  >
+                    Book Now
+                  </Button>
+                  <Button
+                    colorScheme="green"
+                    leftIcon={<ChatIcon />}
+                    w="full"
+                    onClick={onChatOpen}
+                  >
+                    Chat with Chef
+                  </Button>
+                  <Button
+                    colorScheme="orange"
+                    w="full"
+                    onClick={onNegotiateOpen}
+                  >
+                    Negotiate Price
+                  </Button>
+                </VStack>
+              </VStack>
+            </Box>
+          </SimpleGrid>
+
+          <Box>
+            <Heading as="h3" size="lg" mb={4}>
+              Recent Reviews
+            </Heading>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              {/* Add review components here */}
+            </SimpleGrid>
+          </Box>
         </VStack>
-      </MotionBox>
-    </Container>
+      </Container>
+
+      {/* Negotiate Modal */}
+      <Modal isOpen={isNegotiateOpen} onClose={onNegotiateClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Negotiate Price</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>{/* Add negotiation form or content here */}</ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onNegotiateClose}>
+              Submit Offer
+            </Button>
+            <Button variant="ghost" onClick={onNegotiateClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Chat Modal */}
+      <Modal isOpen={isChatOpen} onClose={onChatClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Chat with {chef.name}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>{/* Add chat interface here */}</ModalBody>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 };
 

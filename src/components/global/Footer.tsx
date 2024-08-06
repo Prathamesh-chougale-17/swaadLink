@@ -53,13 +53,6 @@ const Footer = () => {
             <ListHeader>Install App</ListHeader>
             <Box as="a" href="#">
               <img
-                src="/app-store-badge.png"
-                alt="Download on the App Store"
-                style={{ height: "100px", marginBottom: "1px" }}
-              />
-            </Box>
-            <Box as="a" href="#">
-              <img
                 src="/google-play-badge.svg"
                 alt="Get it on Google Play"
                 style={{ height: "100px" }}

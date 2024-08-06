@@ -55,14 +55,14 @@ const Footer = () => {
               <img
                 src="/app-store-badge.png"
                 alt="Download on the App Store"
-                style={{ height: "40px", marginBottom: "10px" }}
+                style={{ height: "100px", marginBottom: "1px" }}
               />
             </Box>
             <Box as="a" href="#">
               <img
-                src="/google-play-badge.png"
+                src="/google-play-badge.svg"
                 alt="Get it on Google Play"
-                style={{ height: "40px" }}
+                style={{ height: "100px" }}
               />
             </Box>
           </Stack>

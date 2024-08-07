@@ -7,11 +7,28 @@ import {
   VStack,
   Text,
   useToast,
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
+  Checkbox,
+  Heading,
+  SimpleGrid,
+  Badge,
+  Spinner,
+  Select,
 } from "@chakra-ui/react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  Circle,
+} from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-// import axios from "axios";
+import ChefCard from "../models/chefBlock";
 
 // Define types
 interface Chef {
@@ -19,6 +36,7 @@ interface Chef {
   name: string;
   categories: string[];
   rating: number;
+
   price: number;
   location: [number, number]; // [latitude, longitude]
 }
@@ -55,7 +73,7 @@ const useGeoLocation = () => {
 const RecenterMap: React.FC<{ position: MapPosition }> = ({ position }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(position);
+    map.setView(position, 13);
   }, [position, map]);
   return null;
 };
@@ -70,20 +88,25 @@ const AdvancedChefMap: React.FC = () => {
   });
   const [searchRadius, setSearchRadius] = useState<number>(5); // km
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([20, 100]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const userLocation = useGeoLocation();
   const toast = useToast();
+  const [sortBy, setSortBy] = useState<"distance" | "price" | "rating">(
+    "distance"
+  );
 
   // Fetch chefs data
   useEffect(() => {
     const fetchChefs = async () => {
+      setIsLoading(true);
       try {
-        // const response = await axios.get<Chef[]>("/api/chefs"); // Replace with your API endpoint
-        // setChefs(response.data);
+        // Simulated API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setChefs([
           {
             id: "1",
-            name: "Chef 1",
+            name: "Chef Antonio",
             categories: ["Italian", "Pasta"],
             rating: 4.5,
             price: 50,
@@ -91,7 +114,7 @@ const AdvancedChefMap: React.FC = () => {
           },
           {
             id: "2",
-            name: "Chef 2",
+            name: "Chef Yuki",
             categories: ["Japanese", "Sushi"],
             rating: 4.8,
             price: 60,
@@ -99,7 +122,7 @@ const AdvancedChefMap: React.FC = () => {
           },
           {
             id: "3",
-            name: "Chef 3",
+            name: "Chef Maria",
             categories: ["Mexican", "Tacos"],
             rating: 4.2,
             price: 40,
@@ -114,6 +137,8 @@ const AdvancedChefMap: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchChefs();
@@ -174,20 +199,45 @@ const AdvancedChefMap: React.FC = () => {
       });
     }
   };
+  const sortedChefs = useMemo(() => {
+    const chefsWithDistance = filteredChefs.map((chef) => ({
+      ...chef,
+      distance:
+        L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
+          L.latLng(chef.location[0], chef.location[1])
+        ) / 1000,
+    }));
 
+    return chefsWithDistance.sort((a, b) => {
+      if (sortBy === "distance") return a.distance - b.distance;
+      if (sortBy === "price") return a.price - b.price;
+      return b.rating - a.rating;
+    });
+  }, [filteredChefs, mapPosition, sortBy]);
   return (
-    <Box height="100vh" width="100%">
-      <Flex height="100%">
-        <VStack width="300px" p={4} bg="gray.50" overflowY="auto">
+    <Box height="120vh" width="100%" bg="gray.50">
+      <Flex height="100%" direction={{ base: "column", md: "row" }}>
+        <VStack
+          width={{ base: "100%", md: "300px" }}
+          p={4}
+          bg="white"
+          boxShadow="md"
+          overflowY="auto"
+          spacing={4}
+        >
+          <Heading size="md">Chef Finder</Heading>
           <Input
             placeholder="Search location"
-            mb={2}
             onChange={() => {
               // Implement geocoding to convert address to coordinates
               // Update mapPosition based on geocoding result
             }}
           />
-          <Button onClick={handleUseCurrentLocation} mb={2}>
+          <Button
+            colorScheme="blue"
+            onClick={handleUseCurrentLocation}
+            width="100%"
+          >
             Use My Location
           </Button>
           <Input
@@ -195,73 +245,114 @@ const AdvancedChefMap: React.FC = () => {
             placeholder="Search radius (km)"
             value={searchRadius}
             onChange={(e) => setSearchRadius(Number(e.target.value))}
-            mb={2}
           />
-          <Text fontWeight="bold" mb={2}>
+          <Text fontWeight="bold" alignSelf="flex-start">
             Categories
           </Text>
-          {Array.from(new Set(chefs.flatMap((chef) => chef.categories))).map(
-            (category) => (
-              <Button
-                key={category}
-                size="sm"
-                colorScheme={
-                  selectedCategories.includes(category) ? "blue" : "gray"
-                }
-                onClick={() => handleCategoryChange(category)}
-                mb={1}
-              >
-                {category}
-              </Button>
-            )
-          )}
-          <Text fontWeight="bold" mt={4} mb={2}>
+          <SimpleGrid columns={2} spacing={2} width="100%">
+            {Array.from(new Set(chefs.flatMap((chef) => chef.categories)))
+              .sort()
+              .map((category) => (
+                <Checkbox
+                  key={category}
+                  isChecked={selectedCategories.includes(category)}
+                  onChange={() => handleCategoryChange(category)}
+                >
+                  {category}
+                </Checkbox>
+              ))}
+          </SimpleGrid>
+          <Text fontWeight="bold" alignSelf="flex-start">
             Price Range
           </Text>
-          <Flex width="100%">
-            <Input
-              type="number"
-              placeholder="Min"
-              value={priceRange[0]}
-              onChange={(e) =>
-                setPriceRange([Number(e.target.value), priceRange[1]])
-              }
-              mr={2}
-            />
-            <Input
-              type="number"
-              placeholder="Max"
-              value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([priceRange[0], Number(e.target.value)])
-              }
-            />
+          <Flex width="100%" direction="column">
+            <RangeSlider
+              aria-label={["min", "max"]}
+              min={20}
+              max={100}
+              step={5}
+              value={priceRange}
+              onChange={(value) => setPriceRange([value[0], value[1]])}
+              colorScheme="blue"
+            >
+              <RangeSliderTrack>
+                <RangeSliderFilledTrack />
+              </RangeSliderTrack>
+              <RangeSliderThumb index={0} />
+              <RangeSliderThumb index={1} />
+            </RangeSlider>
+            <Flex justify="space-between" mt={2}>
+              <Text>${priceRange[0]}</Text>
+              <Text>${priceRange[1]}</Text>
+            </Flex>
           </Flex>
-          <Text mt={4}>Found {filteredChefs.length} chefs</Text>
+          <Text fontWeight="bold">
+            Found {filteredChefs.length} chef
+            {filteredChefs.length !== 1 ? "s" : ""}
+          </Text>
+          <Select
+            value={sortBy}
+            onChange={(e) =>
+              setSortBy(e.target.value as "distance" | "price" | "rating")
+            }
+          >
+            <option value="distance">Sort by Distance</option>
+            <option value="price">Sort by Price</option>
+            <option value="rating">Sort by Rating</option>
+          </Select>
+          <Box maxHeight="300px" overflowY="auto" width="100%">
+            <SimpleGrid columns={1} spacing={4}>
+              {sortedChefs.map((chef) => (
+                <ChefCard key={chef.id} chef={chef} />
+              ))}
+            </SimpleGrid>
+          </Box>
         </VStack>
-        <Box flex={1}>
+        <Box flex={1} position="relative">
+          {isLoading && (
+            <Flex
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              bg="rgba(255, 255, 255, 0.7)"
+              zIndex={1000}
+              justify="center"
+              align="center"
+            >
+              <Spinner size="xl" />
+            </Flex>
+          )}
           <MapContainer
             center={mapPosition}
             zoom={13}
             style={{ height: "100%", width: "100%" }}
-            className="z-0"
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              className="z-0"
             />
             <RecenterMap position={mapPosition} />
+            <Circle center={mapPosition} radius={searchRadius * 1000} />
             {filteredChefs.map((chef) => (
               <Marker key={chef.id} position={chef.location} icon={chefIcon}>
                 <Popup>
-                  <Text fontWeight="bold">{chef.name}</Text>
-                  <Text>Categories: {chef.categories.join(", ")}</Text>
-                  <Text>Rating: {chef.rating}</Text>
-                  <Text>Price: ${chef.price}/hr</Text>
-                  <Button size="sm" colorScheme="blue" mt={2}>
-                    Book Now
-                  </Button>
+                  <VStack align="flex-start" spacing={1}>
+                    <Heading size="sm">{chef.name}</Heading>
+                    <Flex wrap="wrap" gap={1}>
+                      {chef.categories.map((category) => (
+                        <Badge key={category} colorScheme="blue">
+                          {category}
+                        </Badge>
+                      ))}
+                    </Flex>
+                    <Text>Rating: {chef.rating} ⭐</Text>
+                    <Text>Price: ${chef.price}/hr</Text>
+                    <Button size="sm" colorScheme="blue" mt={2}>
+                      Book Now
+                    </Button>
+                  </VStack>
                 </Popup>
               </Marker>
             ))}

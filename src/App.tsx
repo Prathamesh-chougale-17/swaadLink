@@ -7,6 +7,8 @@ import { Box } from "@chakra-ui/react";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
 import NearbyChefs from "./components/map/NearbyMap";
+import AboutUsPage from "./components/routes/AboutUs";
+import ContactPage from "./components/routes/ContactPage";
 
 const App = () => {
   return (
@@ -20,6 +22,8 @@ const App = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/chefs/:id" element={<ChefProfilePage />} />
             <Route path="/chef/nearme" element={<NearbyChefs />} />
+            <Route path="/about" element={<AboutUsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Routes>
         </Router>
       </Box>

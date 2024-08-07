@@ -76,7 +76,7 @@ const Footer = () => {
           justify={{ md: "space-between" }}
           align={{ md: "center" }}
         >
-          <Text>© 2023 Chef Cart. All rights reserved</Text>
+          <Text>© 2023 Swaad Link. All rights reserved</Text>
           <Stack direction={"row"} spacing={6}>
             <Box as="a" href={"#"}>
               <FaTwitter />

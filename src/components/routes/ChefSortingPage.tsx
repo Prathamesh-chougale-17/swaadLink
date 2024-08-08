@@ -301,7 +301,7 @@ const ChefSortingPage: React.FC = () => {
         newSearchParams.set(key, value);
       }
     });
-    setSearchParams(newSearchParams);
+    setSearchParams(newSearchParams, { replace: true });
   };
 
   const handlePriceRangeChange = (value: [number, number]) => {
@@ -465,7 +465,7 @@ const ChefSortingPage: React.FC = () => {
                 <Stack spacing={2}>
                   <Flex justify="space-between">
                     <Text>Price:</Text>
-                    <Text fontWeight="bold">${chef.price}/hr</Text>
+                    <Text fontWeight="bold">${chef.price}/session</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text>Location:</Text>
@@ -556,7 +556,7 @@ const ChefSortingPage: React.FC = () => {
               <Stack spacing={2}>
                 <Flex justify="space-between">
                   <Text>Hourly Rate:</Text>
-                  <Text fontWeight="bold">${selectedChef?.price}/hr</Text>
+                  <Text fontWeight="bold">${selectedChef?.price}/session</Text>
                 </Flex>
                 <Flex justify="space-between">
                   <Text>Monthly Fare:</Text>

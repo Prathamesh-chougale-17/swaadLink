@@ -28,7 +28,7 @@ const ChefCard: React.FC<{ chef: ChefWithDistance }> = ({ chef }) => (
         </Flex>
         <Text>Rating: {chef.rating} ⭐</Text>
         <Text color="blue.600" fontSize="2xl">
-          ${chef.price}/hr
+          ${chef.price}/session
         </Text>
         <Text fontSize="sm">Distance: {chef.distance.toFixed(2)} km</Text>
       </Stack>

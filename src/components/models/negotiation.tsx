@@ -72,8 +72,8 @@ const Negotiation = () => {
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
-            <Text>Current price: ${chef.price}/hr</Text>
-            <Text>Your offer: ${negotiatedPrice}/hr</Text>
+            <Text>Current price: ${chef.price}/session</Text>
+            <Text>Your offer: ${negotiatedPrice}/session</Text>
             <Slider
               min={Math.floor(chef.price * 0.7)}
               max={Math.ceil(chef.price * 1.3)}

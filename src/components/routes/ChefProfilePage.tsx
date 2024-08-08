@@ -294,7 +294,7 @@ const ChefProfilePage: React.FC = () => {
                     <VStack align="start" spacing={4}>
                       <Stat>
                         <StatLabel>Hourly Rate</StatLabel>
-                        <StatNumber>${chef.price}/hr</StatNumber>
+                        <StatNumber>${chef.price}/session</StatNumber>
                         <StatHelpText>
                           Base price for up to 4 guests
                         </StatHelpText>
@@ -336,7 +336,8 @@ const ChefProfilePage: React.FC = () => {
                         </HStack>
                         <Text mt={2}>
                           Price for {guestCount} guests: $
-                          {calculateDynamicPrice(chef.price, guestCount)}/hr
+                          {calculateDynamicPrice(chef.price, guestCount)}
+                          /session
                         </Text>
                       </Box>
                     </VStack>
@@ -483,8 +484,8 @@ const ChefProfilePage: React.FC = () => {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
-              <Text>Current price: ${chef.price}/hr</Text>
-              <Text>Your offer: ${negotiatedPrice}/hr</Text>
+              <Text>Current price: ${chef.price}/session</Text>
+              <Text>Your offer: ${negotiatedPrice}/session</Text>
               <Slider
                 min={Math.floor(chef.price * 0.7)}
                 max={Math.ceil(chef.price * 1.3)}

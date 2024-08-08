@@ -348,7 +348,7 @@ const AdvancedChefMap: React.FC = () => {
                       ))}
                     </Flex>
                     <Text>Rating: {chef.rating} ⭐</Text>
-                    <Text>Price: ${chef.price}/hr</Text>
+                    <Text>Price: ${chef.price}/session</Text>
                     <Button size="sm" colorScheme="blue" mt={2}>
                       Book Now
                     </Button>

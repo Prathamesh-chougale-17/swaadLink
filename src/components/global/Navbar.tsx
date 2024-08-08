@@ -12,6 +12,7 @@ import {
   useColorModeValue,
   useBreakpointValue,
   useDisclosure,
+  Button,
 } from "@chakra-ui/react";
 import {
   SignedIn,
@@ -34,7 +35,7 @@ const NAV_ITEMS = [
       {
         label: "By Cuisine",
         subLabel: "Explore chefs specializing in various cuisines",
-        href: "#",
+        href: "/chef/bycrusine",
       },
       {
         label: "By Location",
@@ -115,6 +116,16 @@ export default function Navbar() {
           spacing={6}
         >
           <Box className="whitespace-nowrap">
+            <Button
+              as="a"
+              href="/register-as-chef"
+              colorScheme="orange"
+              size="sm"
+              mr={4}
+              py={2}
+            >
+              Register as Chef
+            </Button>
             <SignedOut>
               <SignInButton />
             </SignedOut>

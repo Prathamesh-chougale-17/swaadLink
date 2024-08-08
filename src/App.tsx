@@ -9,6 +9,8 @@ import Footer from "./components/global/Footer";
 import NearbyChefs from "./components/map/NearbyMap";
 import AboutUsPage from "./components/routes/AboutUs";
 import ContactPage from "./components/routes/ContactPage";
+import FindChefByCuisine from "./components/routes/FindChefByCuisine";
+import ChefRegistrationForm from "./components/routes/ChefRegistrationForm";
 
 const App = () => {
   return (
@@ -22,8 +24,13 @@ const App = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/chefs/:id" element={<ChefProfilePage />} />
             <Route path="/chef/nearme" element={<NearbyChefs />} />
+            <Route path="/chef/bycrusine" element={<FindChefByCuisine />} />
             <Route path="/about" element={<AboutUsPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route
+              path="/register-as-chef"
+              element={<ChefRegistrationForm />}
+            />
           </Routes>
         </Router>
       </Box>

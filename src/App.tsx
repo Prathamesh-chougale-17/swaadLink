@@ -11,8 +11,10 @@ import AboutUsPage from "./components/routes/AboutUs";
 import ContactPage from "./components/routes/ContactPage";
 import FindChefByCuisine from "./components/routes/FindChefByCuisine";
 import ChefRegistrationForm from "./components/routes/ChefRegistrationForm";
+import { RedirectToSignIn, useUser } from "@clerk/clerk-react";
 
 const App = () => {
+  const { isSignedIn } = useUser();
   return (
     <Box minHeight="100vh" display="flex" flexDirection="column">
       <Navbar />
@@ -29,7 +31,9 @@ const App = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/register-as-chef"
-              element={<ChefRegistrationForm />}
+              element={
+                isSignedIn ? <ChefRegistrationForm /> : <RedirectToSignIn />
+              }
             />
           </Routes>
         </Router>

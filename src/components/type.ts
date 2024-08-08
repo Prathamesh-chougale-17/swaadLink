@@ -5,16 +5,16 @@ export interface MapChef {
     rating: number;
     price: number;
     location: [number, number]; // [latitude, longitude]
-  }
+}
 
-    export interface ChefWithDistance extends MapChef {
-        distance: number;
-    }
+export interface ChefWithDistance extends MapChef {
+distance: number;
+}
 
-    export interface MapPosition {
-        lat: number;
-        lng: number;
-      }
+export interface MapPosition {
+    lat: number;
+    lng: number;
+}
 
 export interface Chef {
   id: string;
@@ -34,4 +34,10 @@ export interface Chef {
   availability: {
     [key: string]: string[];
   };
+}
+
+export interface IFormInputs {
+    name: string;
+    email: string;
+    message: string;
 }

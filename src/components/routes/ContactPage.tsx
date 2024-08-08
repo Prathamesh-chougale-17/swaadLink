@@ -15,12 +15,7 @@ import {
   Text,
   FormErrorMessage,
 } from "@chakra-ui/react";
-
-interface IFormInputs {
-  name: string;
-  email: string;
-  message: string;
-}
+import { IFormInputs } from "../type";
 
 const ContactPage: React.FC = () => {
   const {

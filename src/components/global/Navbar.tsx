@@ -2,7 +2,6 @@ import {
   Box,
   Flex,
   Text,
-  Button,
   Stack,
   Collapse,
   Icon,
@@ -14,6 +13,12 @@ import {
   useBreakpointValue,
   useDisclosure,
 } from "@chakra-ui/react";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/clerk-react";
 import {
   HamburgerIcon,
   CloseIcon,
@@ -109,29 +114,14 @@ export default function Navbar() {
           direction={"row"}
           spacing={6}
         >
-          <Button
-            as={"a"}
-            fontSize={"sm"}
-            fontWeight={400}
-            variant={"link"}
-            href={"#"}
-          >
-            Sign In
-          </Button>
-          <Button
-            as={"a"}
-            display={{ base: "none", md: "inline-flex" }}
-            fontSize={"sm"}
-            fontWeight={600}
-            color={"white"}
-            bg={"orange.400"}
-            href={"#"}
-            _hover={{
-              bg: "orange.300",
-            }}
-          >
-            Sign Up
-          </Button>
+          <Box className="whitespace-nowrap">
+            <SignedOut>
+              <SignInButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </Box>
         </Stack>
       </Flex>
 

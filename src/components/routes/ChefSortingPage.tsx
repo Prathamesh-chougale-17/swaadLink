@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Box,
   Container,
@@ -57,6 +58,7 @@ interface Chef {
 }
 
 const ChefSortingPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("distance");
@@ -71,7 +73,6 @@ const ChefSortingPage: React.FC = () => {
   const toast = useToast();
 
   const chefs: Chef[] = [
-    // ... (previous chef data)
     {
       id: 1,
       name: "Chef Amit",
@@ -223,6 +224,23 @@ const ChefSortingPage: React.FC = () => {
     );
   }, [toast]);
 
+  useEffect(() => {
+    const priceMin = searchParams.get("priceMin");
+    const priceMax = searchParams.get("priceMax");
+    const category = searchParams.get("category");
+    const sort = searchParams.get("sort");
+    const partyOrders = searchParams.get("partyOrders");
+    const search = searchParams.get("search");
+
+    if (priceMin && priceMax) {
+      setPriceRange([Number(priceMin), Number(priceMax)]);
+    }
+    if (category) setSelectedCategory(category);
+    if (sort) setSortBy(sort);
+    if (partyOrders) setCanTakePartyOrders(partyOrders === "true");
+    if (search) setSearchTerm(search);
+  }, [searchParams]);
+
   const calculateDistance = (chef: Chef): number => {
     if (!userLocation) return Infinity;
     const R = 6371; // Earth's radius in km
@@ -274,6 +292,46 @@ const ChefSortingPage: React.FC = () => {
     new Set(chefs.flatMap((chef) => chef.categories))
   );
 
+  const updateSearchParams = (updates: Record<string, string | null>) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null) {
+        newSearchParams.delete(key);
+      } else {
+        newSearchParams.set(key, value);
+      }
+    });
+    setSearchParams(newSearchParams);
+  };
+
+  const handlePriceRangeChange = (value: [number, number]) => {
+    setPriceRange(value);
+    updateSearchParams({
+      priceMin: value[0].toString(),
+      priceMax: value[1].toString(),
+    });
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    updateSearchParams({ category: value || null });
+  };
+
+  const handleSortByChange = (value: string) => {
+    setSortBy(value);
+    updateSearchParams({ sort: value });
+  };
+
+  const handleCanTakePartyOrdersChange = (value: boolean) => {
+    setCanTakePartyOrders(value);
+    updateSearchParams({ partyOrders: value.toString() });
+  };
+
+  const handleSearchTermChange = (value: string) => {
+    setSearchTerm(value);
+    updateSearchParams({ search: value || null });
+  };
+
   return (
     <Container maxW="container.xl" py={8}>
       <Heading as="h1" size="2xl" mb={8} textAlign="center">
@@ -292,7 +350,7 @@ const ChefSortingPage: React.FC = () => {
             <Select
               placeholder="Select a category"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               bg="gray.100"
               borderColor="gray.300"
               _hover={{ borderColor: "gray.400" }}
@@ -314,7 +372,7 @@ const ChefSortingPage: React.FC = () => {
               max={1000}
               step={50}
               value={priceRange}
-              onChange={(value) => setPriceRange([value[0], value[1]])}
+              onChange={(value) => handlePriceRangeChange([value[0], value[1]])}
               colorScheme="orange"
             >
               <RangeSliderTrack>
@@ -334,7 +392,7 @@ const ChefSortingPage: React.FC = () => {
             </Text>
             <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => handleSortByChange(e.target.value)}
               bg="gray.100"
               borderColor="gray.300"
               _hover={{ borderColor: "gray.400" }}
@@ -349,7 +407,7 @@ const ChefSortingPage: React.FC = () => {
         <Flex mt={6} justify="space-between" align="center">
           <Checkbox
             isChecked={canTakePartyOrders}
-            onChange={(e) => setCanTakePartyOrders(e.target.checked)}
+            onChange={(e) => handleCanTakePartyOrdersChange(e.target.checked)}
           >
             Can take party orders
           </Checkbox>
@@ -360,7 +418,7 @@ const ChefSortingPage: React.FC = () => {
             <Input
               placeholder="Search chefs, cuisines, locations..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchTermChange(e.target.value)}
             />
           </InputGroup>
         </Flex>

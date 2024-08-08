@@ -115,7 +115,7 @@ export default function Navbar() {
           direction={"row"}
           spacing={6}
         >
-          <Box className="whitespace-nowrap">
+          <Box className="whitespace-nowrap flex justify-center items-center">
             <Button
               as="a"
               href="/register-as-chef"

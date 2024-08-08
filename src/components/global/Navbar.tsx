@@ -98,6 +98,7 @@ export default function Navbar() {
                 color={useColorModeValue("gray.800", "white")}
                 fontWeight="bold"
                 fontSize="xl"
+                className="hidden md:block"
               >
                 Swaad Link
               </Text>

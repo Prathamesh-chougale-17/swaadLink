@@ -215,7 +215,7 @@ const AdvancedChefMap: React.FC = () => {
     });
   }, [filteredChefs, mapPosition, sortBy]);
   return (
-    <Box height="120vh" width="100%" bg="gray.50">
+    <Box width="100%" bg="gray.50">
       <Flex height="100%" direction={{ base: "column", md: "row" }}>
         <VStack
           width={{ base: "100%", md: "300px" }}

@@ -12,7 +12,6 @@ export const api = axios.create({
 
 export const getChefs = async (params?: string):Promise<Chef[]> => {
   const response = await api.get('/chefs', { params });
-  console.log("get response",response.data);
   return response.data;
 };
 
@@ -24,6 +23,5 @@ export const getChefById = async (id: string):Promise<Chef> => {
 
 export const searchChefs = async (params: searchChefsProps) => {
   const response = await api.get('/chefs/search', { params });
-  console.log("search response",response.data);
   return response.data;
 };

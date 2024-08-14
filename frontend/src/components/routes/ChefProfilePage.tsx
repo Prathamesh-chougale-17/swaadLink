@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   Box,
   Container,
@@ -42,34 +43,12 @@ import {
 } from "@chakra-ui/react";
 import { StarIcon, ChatIcon, CalendarIcon } from "@chakra-ui/icons";
 import { AnimatePresence, motion } from "framer-motion";
+import { Chef } from "../type";
+import { getChefById } from "../../services/api";
+import LoadingComponent from "../global/Loading";
 
 const MotionBox = motion(Box);
 
-interface Chef {
-  id: string;
-  name: string;
-  image: string;
-  coverImage: string;
-  categories: string[];
-  price: number;
-  location: string;
-  rating: number;
-  bio: string;
-  specialDishes: string[];
-  languages: string[];
-  awards: string[];
-  experience: number;
-  monthlyFare: number;
-  trialCharges: number;
-  dynamicPricing: (people: number) => number;
-  status: "active" | "unavailable";
-  availability: {
-    [key: string]: string[];
-  };
-  bookings: number;
-  satisfactionRate: number;
-  totalReviews: number;
-}
 interface Comment {
   id: number;
   user: string;
@@ -80,10 +59,15 @@ interface Comment {
 
 const ChefProfilePage: React.FC = () => {
   const bgColor = useColorModeValue("white", "gray.800");
+  const { id } = useParams<{ id: string }>();
   // const textColor = useColorModeValue("gray.800", "white");
 
-  const calculateDynamicPrice = (basePrice: number, guests: number) => {
-    return basePrice + (guests - 1) * 100;
+  const calculateDynamicPrice = (
+    basePrice: number,
+    guests: number,
+    extraPersonCharges: number
+  ) => {
+    return basePrice + (guests - 1) * extraPersonCharges;
   };
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -94,38 +78,35 @@ const ChefProfilePage: React.FC = () => {
   const [negotiatedPrice, setNegotiatedPrice] = useState(0);
   const toast = useToast();
   const cardBgColor = useColorModeValue("white", "gray.700");
+  const [isLoading, setIsLoading] = useState(true);
+  const [chef, setChef] = useState<Chef | null>(null);
+  const boxBg = useColorModeValue("gray.50", "gray.900");
 
-  const chef: Chef = {
-    id: "1",
-    name: "Chef Amit Kumar",
-    image: "/chef.jpg",
-    categories: ["North Indian", "Mughlai", "Continental"],
-    price: 800,
-    location: "Mumbai, India",
-    rating: 4.8,
-    bio: "With over 15 years of culinary experience, Chef Amit Kumar brings the rich flavors of North India and the finesse of Continental cuisine to your table. His innovative fusion dishes have earned him acclaim in Mumbai's competitive food scene.",
-    specialDishes: ["Butter Chicken", "Rogan Josh", "Truffle Risotto"],
-    awards: ["Best Chef of the Year 2020", "Culinary Innovation Award 2019"],
-    monthlyFare: 15000,
-    trialCharges: 1000,
-    dynamicPricing: (people: number) => 800 + people * 100,
-    experience: 15,
-    status: "active",
-    availability: {
-      Monday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-      Tuesday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-      Wednesday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-      Thursday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-      Friday: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-      Saturday: ["11:00 AM - 3:00 PM", "7:00 PM - 11:00 PM"],
-      Sunday: ["11:00 AM - 3:00 PM", "7:00 PM - 11:00 PM"],
-    },
-    bookings: 250,
-    satisfactionRate: 98,
-    totalReviews: 127,
-    languages: ["Hindi", "English", "Marathi"],
-    coverImage: "/kitchen-background.jpg",
-  };
+  useEffect(() => {
+    const fetchChefData = async () => {
+      setIsLoading(true);
+      try {
+        if (id === undefined) {
+          return;
+        }
+        const chefData = await getChefById(id);
+        setChef(chefData);
+      } catch (error) {
+        console.error("Error fetching chef data:", error);
+        toast({
+          title: "Error fetching chef data",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 1000);
+      }
+    };
+    fetchChefData();
+  }, [id, toast]);
 
   useEffect(() => {
     // Mock API call to fetch comments
@@ -181,6 +162,12 @@ const ChefProfilePage: React.FC = () => {
     });
   };
 
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
+  if (!chef) {
+    return <div>Chef not found</div>;
+  }
   const handleNegotiate = () => {
     setIsNegotiating(true);
     setNegotiatedPrice(chef.price);
@@ -191,7 +178,7 @@ const ChefProfilePage: React.FC = () => {
   };
 
   return (
-    <Box bg={useColorModeValue("gray.50", "gray.900")}>
+    <Box bg={boxBg}>
       <Box
         h="300px"
         bgImage={`url(${chef.coverImage})`}
@@ -336,7 +323,11 @@ const ChefProfilePage: React.FC = () => {
                         </HStack>
                         <Text mt={2}>
                           Price for {guestCount} guests: $
-                          {calculateDynamicPrice(chef.price, guestCount)}
+                          {calculateDynamicPrice(
+                            chef.price,
+                            guestCount,
+                            chef.extraPersonCharges
+                          )}
                           /session
                         </Text>
                       </Box>

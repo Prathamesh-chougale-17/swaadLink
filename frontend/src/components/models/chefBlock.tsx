@@ -11,8 +11,23 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { ChefWithDistance } from "../type";
+// import { ChefWithDistance } from "../type";
+interface localChefProps {
+  id: string;
+  name: string;
+  categories: string[];
+  rating: number;
 
+  price: number;
+  location: {
+    lat: number;
+    lng: number;
+  }; // [latitude, longitude]
+}
+
+interface ChefWithDistance extends localChefProps {
+  distance: number;
+}
 const ChefCard: React.FC<{ chef: ChefWithDistance }> = ({ chef }) => (
   <Card maxW="sm" boxShadow="md" borderRadius="lg">
     <CardBody>

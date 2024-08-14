@@ -1,39 +1,30 @@
-export interface MapChef {
-    id: string;
-    name: string;
-    categories: string[];
-    rating: number;
-    price: number;
-    location: [number, number]; // [latitude, longitude]
-}
-
-export interface ChefWithDistance extends MapChef {
-distance: number;
-}
-
-export interface MapPosition {
-    lat: number;
-    lng: number;
-}
-
 export interface Chef {
-  id: string;
+  _id: string;
   name: string;
-  image: string;
   categories: string[];
+  bio: string;
+  coverImage: string;
   price: number;
   location: string;
-  rating: number;
-  bio: string;
   specialDishes: string[];
-  awards: string[];
+  experience: number;
+  rating: number;
+  languages: string[];
+  image: string;
   monthlyFare: number;
+  awards: string[];
   trialCharges: number;
-  dynamicPricing: (people: number) => number;
+  extraPersonCharges: number;
   status: "active" | "unavailable";
+  canTakePartyOrders: boolean;
+  joinDate: string;
+  coordinates: { lat: number; lng: number };
   availability: {
     [key: string]: string[];
   };
+  bookings: number;
+  satisfactionRate: number;
+  totalReviews: number;
 }
 
 export interface IFormInputs {

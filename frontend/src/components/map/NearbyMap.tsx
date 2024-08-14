@@ -29,18 +29,21 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import ChefCard from "../models/chefBlock";
+import { getChefs } from "../../services/api";
 
 // Define types
-interface Chef {
+interface localChefProps {
   id: string;
   name: string;
   categories: string[];
   rating: number;
 
   price: number;
-  location: [number, number]; // [latitude, longitude]
+  location: {
+    lat: number;
+    lng: number;
+  }; // [latitude, longitude]
 }
-
 interface MapPosition {
   lat: number;
   lng: number;
@@ -80,8 +83,8 @@ const RecenterMap: React.FC<{ position: MapPosition }> = ({ position }) => {
 
 // Main component
 const AdvancedChefMap: React.FC = () => {
-  const [chefs, setChefs] = useState<Chef[]>([]);
-  const [filteredChefs, setFilteredChefs] = useState<Chef[]>([]);
+  const [chefs, setChefs] = useState<localChefProps[]>([]);
+  const [filteredChefs, setFilteredChefs] = useState<localChefProps[]>([]);
   const [mapPosition, setMapPosition] = useState<MapPosition>({
     lat: 51.505,
     lng: -0.09,
@@ -103,32 +106,42 @@ const AdvancedChefMap: React.FC = () => {
       try {
         // Simulated API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        setChefs([
-          {
-            id: "1",
-            name: "Chef Antonio",
-            categories: ["Italian", "Pasta"],
-            rating: 4.5,
-            price: 50,
-            location: [51.505, -0.09],
-          },
-          {
-            id: "2",
-            name: "Chef Yuki",
-            categories: ["Japanese", "Sushi"],
-            rating: 4.8,
-            price: 60,
-            location: [51.51, -0.1],
-          },
-          {
-            id: "3",
-            name: "Chef Maria",
-            categories: ["Mexican", "Tacos"],
-            rating: 4.2,
-            price: 40,
-            location: [51.515, -0.095],
-          },
-        ]);
+        // setChefs([
+        //   {
+        //     id: "1",
+        //     name: "Chef Antonio",
+        //     categories: ["Italian", "Pasta"],
+        //     rating: 4.5,
+        //     price: 50,
+        //     location: [51.505, -0.09],
+        //   },
+        //   {
+        //     id: "2",
+        //     name: "Chef Yuki",
+        //     categories: ["Japanese", "Sushi"],
+        //     rating: 4.8,
+        //     price: 60,
+        //     location: [51.51, -0.1],
+        //   },
+        //   {
+        //     id: "3",
+        //     name: "Chef Maria",
+        //     categories: ["Mexican", "Tacos"],
+        //     rating: 4.2,
+        //     price: 40,
+        //     location: [51.515, -0.095],
+        //   },
+        // ]);
+        const data = await getChefs();
+        const chef = data.map((chef) => ({
+          id: chef._id,
+          name: chef.name,
+          categories: chef.categories,
+          rating: chef.rating,
+          price: chef.price,
+          location: chef.coordinates,
+        }));
+        setChefs(chef);
       } catch (error) {
         console.error("Error fetching chefs:", error);
         toast({
@@ -149,7 +162,7 @@ const AdvancedChefMap: React.FC = () => {
     const filtered = chefs.filter((chef) => {
       const distance =
         L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
-          L.latLng(chef.location[0], chef.location[1])
+          L.latLng(chef.location.lat, chef.location.lng)
         ) / 1000; // Convert to km
       const categoryMatch =
         selectedCategories.length === 0 ||
@@ -200,13 +213,16 @@ const AdvancedChefMap: React.FC = () => {
     }
   };
   const sortedChefs = useMemo(() => {
-    const chefsWithDistance = filteredChefs.map((chef) => ({
-      ...chef,
-      distance:
-        L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
-          L.latLng(chef.location[0], chef.location[1])
-        ) / 1000,
-    }));
+    const chefsWithDistance = filteredChefs.map(
+      (chef) => ({
+        ...chef,
+        distance:
+          L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
+            L.latLng(chef.location.lat, chef.location.lng)
+          ) / 1000,
+      }),
+      [filteredChefs]
+    );
 
     return chefsWithDistance.sort((a, b) => {
       if (sortBy === "distance") return a.distance - b.distance;

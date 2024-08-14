@@ -37,25 +37,10 @@ import {
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchIcon } from "@chakra-ui/icons";
-
+import { Chef } from "../type";
+import { getChefs } from "../../services/api";
+import LoadingComponent from "../global/Loading";
 const MotionCard = motion(Card);
-
-interface Chef {
-  id: number;
-  name: string;
-  categories: string[];
-  price: number;
-  location: string;
-  rating: number;
-  image: string;
-  monthlyFare: number;
-  trialCharges: number;
-  dynamicPricing: (people: number) => number;
-  status: "active" | "unavailable";
-  canTakePartyOrders: boolean;
-  joinDate: string;
-  coordinates: { lat: number; lng: number };
-}
 
 const ChefSortingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,142 +52,356 @@ const ChefSortingPage: React.FC = () => {
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
-  } | null>(null);
+  }>({ lat: 0, lng: 0 });
   const [selectedChef, setSelectedChef] = useState<Chef | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [chefs, setChefs] = useState<Chef[]>([]);
   const toast = useToast();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const chefs: Chef[] = [
-    {
-      id: 1,
-      name: "Chef Amit",
-      categories: ["Maharashtrian", "North Indian"],
-      price: 500,
-      location: "Mumbai",
-      rating: 4.8,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 15000,
-      trialCharges: 1000,
-      dynamicPricing: (people) => 500 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-01-15",
-      coordinates: { lat: 19.076, lng: 72.8777 },
-    },
-    {
-      id: 2,
-      name: "Chef Priya",
-      categories: ["South Indian", "Chinese"],
-      price: 400,
-      location: "Bangalore",
-      rating: 4.5,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 12000,
-      trialCharges: 800,
-      dynamicPricing: (people) => 400 + people * 100,
-      status: "active",
-      canTakePartyOrders: false,
-      joinDate: "2023-02-20",
-      coordinates: { lat: 12.9716, lng: 77.5946 },
-    },
-    {
-      id: 3,
-      name: "Chef Rahul",
-      categories: ["Italian", "Mexican"],
-      price: 600,
-      location: "Delhi",
-      rating: 4.7,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 18000,
-      trialCharges: 1200,
-      dynamicPricing: (people) => 600 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-03-25",
-      coordinates: { lat: 28.7041, lng: 77.1025 },
-    },
-    {
-      id: 4,
-      name: "Chef Nisha",
-      categories: ["Thai", "Turkish"],
-      price: 700,
-      location: "Chennai",
-      rating: 4.6,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 21000,
-      trialCharges: 1400,
-      dynamicPricing: (people) => 700 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-04-30",
-      coordinates: { lat: 13.0827, lng: 80.2707 },
-    },
-    {
-      id: 5,
-      name: "Chef Ravi",
-      categories: ["Mediterranean", "Spanish"],
-      price: 550,
-      location: "Goa",
-      rating: 4.9,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 16500,
-      trialCharges: 1100,
-      dynamicPricing: (people) => 550 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-05-10",
-      coordinates: { lat: 15.2993, lng: 74.124 },
-    },
-    {
-      id: 6,
-      name: "Chef Anjali",
-      categories: ["French", "Spanish"],
-      price: 650,
-      location: "Pune",
-      rating: 4.8,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 19500,
-      trialCharges: 1300,
-      dynamicPricing: (people) => 650 + people * 100,
-      status: "active",
-      canTakePartyOrders: false,
-      joinDate: "2023-06-15",
-      coordinates: { lat: 18.5204, lng: 73.8567 },
-    },
-    {
-      id: 7,
-      name: "Chef Aditya",
-      categories: ["Italian", "Mexican"],
-      price: 750,
-      location: "Jaipur",
-      rating: 4.7,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 22500,
-      trialCharges: 1500,
-      dynamicPricing: (people) => 750 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-07-20",
-      coordinates: { lat: 26.9124, lng: 75.7873 },
-    },
-    {
-      id: 8,
-      name: "Chef Neha",
-      categories: ["Thai", "Turkish"],
-      price: 800,
-      location: "Hyderabad",
-      rating: 4.6,
-      image: "/api/placeholder/100/100",
-      monthlyFare: 24000,
-      trialCharges: 1600,
-      dynamicPricing: (people) => 800 + people * 100,
-      status: "active",
-      canTakePartyOrders: true,
-      joinDate: "2023-08-25",
-      coordinates: { lat: 17.385, lng: 78.4867 },
-    },
-    // ... (add more chefs with the new properties)
-  ];
+  // const chefs: Chef[] = [
+  //   {
+  //     id: "1",
+  //     name: "Chef John Doe",
+  //     categories: ["Italian", "French", "Japanese"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef1.jpg",
+  //     price: 100,
+  //     location: "New York, USA",
+  //     specialDishes: ["Pasta", "Ratatouille", "Sushi"],
+  //     experience: 10,
+  //     rating: 4.5,
+  //     languages: ["English", "French", "Italian"],
+  //     image: "/images/chef1.jpg",
+  //     monthlyFare: 2000,
+  //     awards: ["Best Chef 2018", "Top 10 Chefs in USA"],
+  //     trialCharges: 50,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-01-01",
+  //     coordinates: { lat: 40.7128, lng: -74.006 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 50,
+  //     satisfactionRate: 95,
+  //     totalReviews: 100,
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Chef Jane Doe",
+  //     categories: ["Mexican", "Chinese", "Indian"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef2.jpg",
+  //     price: 120,
+  //     location: "Los Angeles, USA",
+  //     specialDishes: ["Tacos", "Dim Sums", "Biryani"],
+  //     experience: 8,
+  //     rating: 4.2,
+  //     languages: ["English", "Spanish", "Hindi"],
+  //     image: "/images/chef2.jpg",
+  //     monthlyFare: 2500,
+  //     awards: ["Top 10 Chefs in USA"],
+  //     trialCharges: 60,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: false,
+  //     joinDate: "2021-02-01",
+  //     coordinates: { lat: 34.0522, lng: -118.2437 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 40,
+  //     satisfactionRate: 90,
+  //     totalReviews: 80,
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Chef Alice Smith",
+  //     categories: ["American", "Mediterranean", "Thai"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef3.jpg",
+  //     price: 90,
+  //     location: "Chicago, USA",
+  //     specialDishes: ["Burgers", "Falafel", "Pad Thai"],
+  //     experience: 12,
+  //     rating: 4.7,
+  //     languages: ["English", "Arabic", "Thai"],
+  //     image: "/images/chef3.jpg",
+  //     monthlyFare: 1800,
+  //     awards: ["Best Chef 2019", "Top 5 Chefs in USA"],
+  //     trialCharges: 45,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-03-01",
+  //     coordinates: { lat: 41.8781, lng: -87.6298 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 60,
+  //     satisfactionRate: 98,
+  //     totalReviews: 120,
+  //   },
+  //   {
+  //     id: "4",
+  //     name: "Chef Bob Brown",
+  //     categories: ["Greek", "Korean", "Vietnamese"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef4.jpg",
+  //     price: 110,
+  //     location: "San Francisco, USA",
+  //     specialDishes: ["Gyros", "Bibimbap", "Pho"],
+  //     experience: 9,
+  //     rating: 4.4,
+  //     languages: ["English", "Greek", "Korean"],
+  //     image: "/images/chef4.jpg",
+  //     monthlyFare: 2200,
+  //     awards: ["Top 10 Chefs in USA"],
+  //     trialCharges: 55,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: false,
+  //     joinDate: "2021-04-01",
+  //     coordinates: { lat: 37.7749, lng: -122.4194 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 45,
+  //     satisfactionRate: 92,
+  //     totalReviews: 90,
+  //   },
+  //   {
+  //     id: "5",
+  //     name: "Chef Emily Johnson",
+  //     categories: ["Spanish", "Turkish", "Lebanese"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef5.jpg",
+  //     price: 95,
+  //     location: "Miami, USA",
+  //     specialDishes: ["Paella", "Kebabs", "Falafel"],
+  //     experience: 11,
+  //     rating: 4.6,
+  //     languages: ["English", "Spanish", "Turkish"],
+  //     image: "/images/chef5.jpg",
+  //     monthlyFare: 1900,
+  //     awards: ["Top 5 Chefs in USA"],
+  //     trialCharges: 50,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-05-01",
+  //     coordinates: { lat: 25.7617, lng: -80.1918 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 55,
+  //     satisfactionRate: 96,
+  //     totalReviews: 110,
+  //   },
+  //   {
+  //     id: "6",
+  //     name: "Chef David Wilson",
+  //     categories: ["German", "Russian", "Swedish"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef6.jpg",
+  //     price: 130,
+  //     location: "Seattle, USA",
+  //     specialDishes: ["Schnitzel", "Pelmeni", "Meatballs"],
+  //     experience: 7,
+  //     rating: 4.1,
+  //     languages: ["English", "German", "Russian"],
+  //     image: "/images/chef6.jpg",
+  //     monthlyFare: 2600,
+  //     awards: ["Top 10 Chefs in USA"],
+  //     trialCharges: 65,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: false,
+  //     joinDate: "2021-06-01",
+  //     coordinates: { lat: 47.6062, lng: -122.3321 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 35,
+  //     satisfactionRate: 88,
+  //     totalReviews: 70,
+  //   },
+  //   {
+  //     id: "7",
+  //     name: "Chef Sarah Miller",
+  //     categories: ["Brazilian", "Peruvian", "Argentinian"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef7.jpg",
+  //     price: 85,
+  //     location: "Rio de Janeiro, Brazil",
+  //     specialDishes: ["Feijoada", "Ceviche", "Asado"],
+  //     experience: 13,
+  //     rating: 4.8,
+  //     languages: ["English", "Portuguese", "Spanish"],
+  //     image: "/images/chef7.jpg",
+  //     monthlyFare: 1700,
+  //     awards: ["Best Chef 2020", "Top 5 Chefs in Brazil"],
+  //     trialCharges: 42.5,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-07-01",
+  //     coordinates: { lat: -22.9068, lng: -43.1729 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 65,
+  //     satisfactionRate: 99,
+  //     totalReviews: 130,
+  //   },
+  //   {
+  //     id: "8",
+  //     name: "Chef John Doe",
+  //     categories: ["Italian", "French", "Japanese"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef1.jpg",
+  //     price: 100,
+  //     location: "New York, USA",
+  //     specialDishes: ["Pasta", "Ratatouille", "Sushi"],
+  //     experience: 10,
+  //     rating: 4.5,
+  //     languages: ["English", "French", "Italian"],
+  //     image: "/images/chef1.jpg",
+  //     monthlyFare: 2000,
+  //     awards: ["Best Chef 2018", "Top 10 Chefs in USA"],
+  //     trialCharges: 50,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-01-01",
+  //     coordinates: { lat: 40.7128, lng: -74.006 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 50,
+  //     satisfactionRate: 95,
+  //     totalReviews: 100,
+  //   },
+  //   {
+  //     id: "9",
+  //     name: "Chef Jane Doe",
+  //     categories: ["Mexican", "Chinese", "Indian"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef2.jpg",
+  //     price: 120,
+  //     location: "Los Angeles, USA",
+  //     specialDishes: ["Tacos", "Dim Sums", "Biryani"],
+  //     experience: 8,
+  //     rating: 4.2,
+  //     languages: ["English", "Spanish", "Hindi"],
+  //     image: "/images/chef2.jpg",
+  //     monthlyFare: 2500,
+  //     awards: ["Top 10 Chefs in USA"],
+  //     trialCharges: 60,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: false,
+  //     joinDate: "2021-02-01",
+  //     coordinates: { lat: 34.0522, lng: -118.2437 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 40,
+  //     satisfactionRate: 90,
+  //     totalReviews: 80,
+  //   },
+  //   {
+  //     id: "10",
+  //     name: "Chef Alice Smith",
+  //     categories: ["American", "Mediterranean", "Thai"],
+  //     bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut purus vitae libero.",
+  //     coverImage: "/images/chef3.jpg",
+  //     price: 90,
+  //     location: "Chicago, USA",
+  //     specialDishes: ["Burgers", "Falafel", "Pad Thai"],
+  //     experience: 12,
+  //     rating: 4.7,
+  //     languages: ["English", "Arabic", "Thai"],
+  //     image: "/images/chef3.jpg",
+  //     monthlyFare: 1800,
+  //     awards: ["Best Chef 2019", "Top 5 Chefs in USA"],
+  //     trialCharges: 45,
+  //     extraPersonCharges: 20,
+  //     status: "active",
+  //     canTakePartyOrders: true,
+  //     joinDate: "2021-03-01",
+  //     coordinates: { lat: 41.8781, lng: -87.6298 },
+  //     availability: {
+  //       Sunday: ["10:00", "14:00", "18:00"],
+  //       Monday: ["11:00", "15:00", "19:00"],
+  //       Tuesday: ["11:00", "15:00", "19:00"],
+  //       Wednesday: ["11:00", "15:00", "19:00"],
+  //       Thursday: ["11:00", "15:00", "19:00"],
+  //       Friday: ["11:00", "15:00", "19:00"],
+  //       Saturday: ["11:00", "15:00", "19:00"],
+  //     },
+  //     bookings: 60,
+  //     satisfactionRate: 98,
+  //     totalReviews: 120,
+  //   },
+  //   // ... (add more chefs with the new properties)
+  // ];
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -225,21 +424,25 @@ const ChefSortingPage: React.FC = () => {
   }, [toast]);
 
   useEffect(() => {
-    const priceMin = searchParams.get("priceMin");
-    const priceMax = searchParams.get("priceMax");
-    const category = searchParams.get("category");
-    const sort = searchParams.get("sort");
-    const partyOrders = searchParams.get("partyOrders");
-    const search = searchParams.get("search");
-
-    if (priceMin && priceMax) {
-      setPriceRange([Number(priceMin), Number(priceMax)]);
-    }
-    if (category) setSelectedCategory(category);
-    if (sort) setSortBy(sort);
-    if (partyOrders) setCanTakePartyOrders(partyOrders === "true");
-    if (search) setSearchTerm(search);
-  }, [searchParams]);
+    const fetchChefs = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedChefs = await getChefs();
+        setChefs(fetchedChefs);
+      } catch (error) {
+        console.error("Error fetching chefs:", error);
+        toast({
+          title: "Error fetching chefs",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChefs();
+  }, [toast]);
 
   const calculateDistance = (chef: Chef): number => {
     if (!userLocation) return Infinity;
@@ -331,6 +534,10 @@ const ChefSortingPage: React.FC = () => {
     setSearchTerm(value);
     updateSearchParams({ search: value || null });
   };
+
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -428,7 +635,7 @@ const ChefSortingPage: React.FC = () => {
         <SimpleGrid columns={[1, null, 2, 3]} spacing={6}>
           {filteredAndSortedChefs.map((chef) => (
             <MotionCard
-              key={chef.id}
+              key={chef._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -567,9 +774,11 @@ const ChefSortingPage: React.FC = () => {
                   <Text fontWeight="bold">${selectedChef?.trialCharges}</Text>
                 </Flex>
                 <Flex justify="space-between">
-                  <Text>Dynamic Pricing (4 people):</Text>
+                  <Text>Family Pricing (4 people):</Text>
                   <Text fontWeight="bold">
-                    ${selectedChef?.dynamicPricing(4)}
+                    $
+                    {(selectedChef?.price ?? 0) +
+                      (selectedChef?.extraPersonCharges ?? 0) * 4}
                   </Text>
                 </Flex>
                 <Flex justify="space-between">
@@ -583,7 +792,7 @@ const ChefSortingPage: React.FC = () => {
                 colorScheme="orange"
                 onClick={onClose}
                 as={"a"}
-                href={`/chefs/${selectedChef?.id}`}
+                href={`/chefs/${selectedChef?._id}`}
               >
                 Book {selectedChef?.name}
               </Button>

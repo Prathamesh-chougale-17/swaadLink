@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Container,
@@ -19,10 +19,14 @@ import {
 } from "@chakra-ui/react";
 import { SearchIcon, StarIcon } from "@chakra-ui/icons";
 import { motion, AnimatePresence } from "framer-motion";
+import { getChefs } from "../../services/api";
+import { Chef } from "../type";
+import LoadingComponent from "../global/Loading";
 
 // Define TypeScript interfaces
-interface Chef {
-  id: number;
+
+interface localChef {
+  id: string;
   name: string;
   cuisines: string[];
   price: number;
@@ -32,114 +36,80 @@ interface Chef {
 }
 
 interface CuisineGroup {
-  [key: string]: Chef[];
+  [key: string]: localChef[];
 }
 
 // Sample data
-const chefs: Chef[] = [
-  {
-    id: 1,
-    name: "Alain Ducasse",
-    cuisines: ["French", "Mediterranean"],
-    price: 300,
-    rating: 4.9,
-    distance: 5.2,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 2,
-    name: "Massimo Bottura",
-    cuisines: ["Italian", "Modern"],
-    price: 250,
-    rating: 4.8,
-    distance: 3.7,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 3,
-    name: "Carme Ruscalleda",
-    cuisines: ["Catalan", "Spanish"],
-    price: 220,
-    rating: 4.7,
-    distance: 7.1,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 4,
-    name: "Yoshihiro Murata",
-    cuisines: ["Japanese", "Kaiseki"],
-    price: 280,
-    rating: 4.9,
-    distance: 6.3,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 5,
-    name: "Anne-Sophie Pic",
-    cuisines: ["French", "Innovative"],
-    price: 270,
-    rating: 4.8,
-    distance: 4.5,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 6,
-    name: "Gordon Ramsay",
-    cuisines: ["British", "French"],
-    price: 290,
-    rating: 4.7,
-    distance: 8.2,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 7,
-    name: "Gaggan Anand",
-    cuisines: ["Indian", "Progressive"],
-    price: 230,
-    rating: 4.8,
-    distance: 5.9,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 8,
-    name: "Elena Arzak",
-    cuisines: ["Basque", "Avant-garde"],
-    price: 240,
-    rating: 4.7,
-    distance: 7.8,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 9,
-    name: "Virgilio Martínez",
-    cuisines: ["Peruvian"],
-    price: 260,
-    rating: 4.9,
-    distance: 4.3,
-    image: "/api/placeholder/150/150",
-  },
-  {
-    id: 10,
-    name: "David Chang",
-    cuisines: ["Asian", "Fusion"],
-    price: 200,
-    rating: 4.6,
-    distance: 6.7,
-    image: "/api/placeholder/150/150",
-  },
-];
-
 const MotionBox = motion(Box);
 
 const FindChefByCuisine: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [data, setData] = useState<Chef[]>([]);
   const [selectedCuisine, setSelectedCuisine] = useState<string>("");
   const [sortBy, setSortBy] = useState<"price" | "rating" | "distance">(
     "rating"
   );
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  }>({ lat: 0, lng: 0 });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) =>
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }),
+      (error) => {
+        console.error("Error getting location:", error);
+      }
+    );
+  }, []);
 
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const cardBgColor = useColorModeValue("white", "gray.800");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const chefs = await getChefs();
+        setData(chefs);
+      } catch (error) {
+        console.error("Error fetching chefs:", error);
+      } finally {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 1000);
+      }
+    };
+    fetchData();
+  });
+
+  const calculateDistance = (chef: Chef): number => {
+    if (!userLocation) return Infinity;
+    const R = 6371; // Earth's radius in km
+    const dLat = (chef.coordinates.lat - userLocation.lat) * (Math.PI / 180);
+    const dLon = (chef.coordinates.lng - userLocation.lng) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(userLocation.lat * (Math.PI / 180)) *
+        Math.cos(chef.coordinates.lat * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const chefs = data.map((chef) => ({
+    id: chef._id,
+    name: chef.name,
+    cuisines: chef.categories,
+    price: chef.price,
+    rating: chef.rating,
+    distance: Number(calculateDistance(chef).toFixed(1)),
+    image: chef.image,
+  }));
 
   const filteredAndSortedChefs = useMemo(() => {
     return chefs
@@ -152,7 +122,7 @@ const FindChefByCuisine: React.FC = () => {
           (selectedCuisine === "" || chef.cuisines.includes(selectedCuisine))
       )
       .sort((a, b) => b[sortBy] - a[sortBy]);
-  }, [searchTerm, selectedCuisine, sortBy]);
+  }, [searchTerm, selectedCuisine, sortBy, chefs]);
 
   const groupedChefs = useMemo(() => {
     return filteredAndSortedChefs.reduce((acc: CuisineGroup, chef) => {
@@ -168,9 +138,12 @@ const FindChefByCuisine: React.FC = () => {
 
   const allCuisines = useMemo(
     () => Array.from(new Set(chefs.flatMap((chef) => chef.cuisines))).sort(),
-    []
+    [chefs]
   );
 
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
   return (
     <Box bg={bgColor} minHeight="100vh" py={8}>
       <Container maxW="container.xl">
@@ -279,9 +252,7 @@ const FindChefByCuisine: React.FC = () => {
                           <Text>{chef.rating.toFixed(1)}</Text>
                         </HStack>
                       </HStack>
-                      <Text color="gray.500">
-                        {chef.distance.toFixed(1)} km away
-                      </Text>
+                      <Text color="gray.500">{chef.distance} km away</Text>
                       <Button colorScheme="blue" mt={4} w="full">
                         Book Now
                       </Button>

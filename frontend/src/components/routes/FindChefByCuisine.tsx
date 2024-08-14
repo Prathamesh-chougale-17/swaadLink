@@ -78,9 +78,7 @@ const FindChefByCuisine: React.FC = () => {
       } catch (error) {
         console.error("Error fetching chefs:", error);
       } finally {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
+        setIsLoading(false);
       }
     };
     fetchData();

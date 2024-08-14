@@ -100,9 +100,7 @@ const ChefProfilePage: React.FC = () => {
           isClosable: true,
         });
       } finally {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 1000);
+        setIsLoading(false);
       }
     };
     fetchChefData();

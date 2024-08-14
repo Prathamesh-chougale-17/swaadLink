@@ -30,20 +30,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import ChefCard from "../models/chefBlock";
 import { getChefs } from "../../services/api";
+import { Chef } from "../type";
 
 // Define types
-interface localChefProps {
-  id: string;
-  name: string;
-  categories: string[];
-  rating: number;
-
-  price: number;
-  location: {
-    lat: number;
-    lng: number;
-  }; // [latitude, longitude]
-}
 interface MapPosition {
   lat: number;
   lng: number;
@@ -83,8 +72,9 @@ const RecenterMap: React.FC<{ position: MapPosition }> = ({ position }) => {
 
 // Main component
 const AdvancedChefMap: React.FC = () => {
-  const [chefs, setChefs] = useState<localChefProps[]>([]);
-  const [filteredChefs, setFilteredChefs] = useState<localChefProps[]>([]);
+  const [isDistance, setIsDistance] = useState<boolean>(false);
+  const [chefs, setChefs] = useState<Chef[]>([]);
+  const [filteredChefs, setFilteredChefs] = useState<Chef[]>([]);
   const [mapPosition, setMapPosition] = useState<MapPosition>({
     lat: 51.505,
     lng: -0.09,
@@ -98,50 +88,15 @@ const AdvancedChefMap: React.FC = () => {
   const [sortBy, setSortBy] = useState<"distance" | "price" | "rating">(
     "distance"
   );
+  const [allFilterChef, setAllFilterChef] = useState<Chef[]>([]);
 
   // Fetch chefs data
   useEffect(() => {
     const fetchChefs = async () => {
       setIsLoading(true);
       try {
-        // Simulated API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        // setChefs([
-        //   {
-        //     id: "1",
-        //     name: "Chef Antonio",
-        //     categories: ["Italian", "Pasta"],
-        //     rating: 4.5,
-        //     price: 50,
-        //     location: [51.505, -0.09],
-        //   },
-        //   {
-        //     id: "2",
-        //     name: "Chef Yuki",
-        //     categories: ["Japanese", "Sushi"],
-        //     rating: 4.8,
-        //     price: 60,
-        //     location: [51.51, -0.1],
-        //   },
-        //   {
-        //     id: "3",
-        //     name: "Chef Maria",
-        //     categories: ["Mexican", "Tacos"],
-        //     rating: 4.2,
-        //     price: 40,
-        //     location: [51.515, -0.095],
-        //   },
-        // ]);
         const data = await getChefs();
-        const chef = data.map((chef) => ({
-          id: chef._id,
-          name: chef.name,
-          categories: chef.categories,
-          rating: chef.rating,
-          price: chef.price,
-          location: chef.coordinates,
-        }));
-        setChefs(chef);
+        setChefs(data);
       } catch (error) {
         console.error("Error fetching chefs:", error);
         toast({
@@ -162,7 +117,7 @@ const AdvancedChefMap: React.FC = () => {
     const filtered = chefs.filter((chef) => {
       const distance =
         L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
-          L.latLng(chef.location.lat, chef.location.lng)
+          L.latLng(chef.coordinates.lat, chef.coordinates.lng)
         ) / 1000; // Convert to km
       const categoryMatch =
         selectedCategories.length === 0 ||
@@ -173,6 +128,18 @@ const AdvancedChefMap: React.FC = () => {
     });
     setFilteredChefs(filtered);
   }, [chefs, mapPosition, searchRadius, selectedCategories, priceRange]);
+
+  useEffect(() => {
+    const filterChef = chefs.filter((chef) => {
+      const categoryMatch =
+        selectedCategories.length === 0 ||
+        chef.categories.some((cat) => selectedCategories.includes(cat));
+      const priceMatch =
+        chef.price >= priceRange[0] && chef.price <= priceRange[1];
+      return categoryMatch && priceMatch;
+    });
+    setAllFilterChef(filterChef);
+  }, [selectedCategories, priceRange, chefs]);
 
   // Custom chef icon
   const chefIcon = useMemo(
@@ -218,18 +185,36 @@ const AdvancedChefMap: React.FC = () => {
         ...chef,
         distance:
           L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
-            L.latLng(chef.location.lat, chef.location.lng)
+            L.latLng(chef.coordinates.lat, chef.coordinates.lng)
           ) / 1000,
       }),
       [filteredChefs]
     );
-
     return chefsWithDistance.sort((a, b) => {
       if (sortBy === "distance") return a.distance - b.distance;
       if (sortBy === "price") return a.price - b.price;
       return b.rating - a.rating;
     });
   }, [filteredChefs, mapPosition, sortBy]);
+
+  const allSortedChefs = useMemo(() => {
+    const chefsWithDistance = allFilterChef.map(
+      (chef) => ({
+        ...chef,
+        distance:
+          L.latLng(mapPosition.lat, mapPosition.lng).distanceTo(
+            L.latLng(chef.coordinates.lat, chef.coordinates.lng)
+          ) / 1000,
+      }),
+      [allFilterChef]
+    );
+    return chefsWithDistance.sort((a, b) => {
+      if (sortBy === "distance") return a.distance - b.distance;
+      if (sortBy === "price") return a.price - b.price;
+      return b.rating - a.rating;
+    });
+  }, [allFilterChef, mapPosition, sortBy]);
+
   return (
     <Box width="100%" bg="gray.50">
       <Flex height="100%" direction={{ base: "column", md: "row" }}>
@@ -255,6 +240,13 @@ const AdvancedChefMap: React.FC = () => {
             width="100%"
           >
             Use My Location
+          </Button>
+          <Button
+            colorScheme="orange"
+            onClick={() => setIsDistance((prev) => !prev)}
+            width="100%"
+          >
+            Show near by chefs
           </Button>
           <Input
             type="number"
@@ -303,8 +295,10 @@ const AdvancedChefMap: React.FC = () => {
             </Flex>
           </Flex>
           <Text fontWeight="bold">
-            Found {filteredChefs.length} chef
-            {filteredChefs.length !== 1 ? "s" : ""}
+            Found {isDistance ? filteredChefs.length : allSortedChefs.length}{" "}
+            chef
+            {isDistance && (filteredChefs.length !== 1 ? "s" : "")}
+            {isDistance && (allSortedChefs.length !== 1 ? "s" : "")}
           </Text>
           <Select
             value={sortBy}
@@ -318,9 +312,13 @@ const AdvancedChefMap: React.FC = () => {
           </Select>
           <Box maxHeight="300px" overflowY="auto" width="100%">
             <SimpleGrid columns={1} spacing={4}>
-              {sortedChefs.map((chef) => (
-                <ChefCard key={chef.id} chef={chef} />
-              ))}
+              {isDistance
+                ? sortedChefs.map((chef) => (
+                    <ChefCard key={chef._id} chef={chef} />
+                  ))
+                : allSortedChefs.map((chef) => (
+                    <ChefCard key={chef._id} chef={chef} />
+                  ))}
             </SimpleGrid>
           </Box>
         </VStack>
@@ -350,28 +348,60 @@ const AdvancedChefMap: React.FC = () => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             <RecenterMap position={mapPosition} />
-            <Circle center={mapPosition} radius={searchRadius * 1000} />
-            {filteredChefs.map((chef) => (
-              <Marker key={chef.id} position={chef.location} icon={chefIcon}>
-                <Popup>
-                  <VStack align="flex-start" spacing={1}>
-                    <Heading size="sm">{chef.name}</Heading>
-                    <Flex wrap="wrap" gap={1}>
-                      {chef.categories.map((category) => (
-                        <Badge key={category} colorScheme="blue">
-                          {category}
-                        </Badge>
-                      ))}
-                    </Flex>
-                    <Text>Rating: {chef.rating} ⭐</Text>
-                    <Text>Price: ${chef.price}/session</Text>
-                    <Button size="sm" colorScheme="blue" mt={2}>
-                      Book Now
-                    </Button>
-                  </VStack>
-                </Popup>
-              </Marker>
-            ))}
+            {isDistance && (
+              <Circle center={mapPosition} radius={searchRadius * 1000} />
+            )}
+            {isDistance
+              ? filteredChefs.map((chef) => (
+                  <Marker
+                    key={chef._id}
+                    position={chef.coordinates}
+                    icon={chefIcon}
+                  >
+                    <Popup>
+                      <VStack align="flex-start" spacing={1}>
+                        <Heading size="sm">{chef.name}</Heading>
+                        <Flex wrap="wrap" gap={1}>
+                          {chef.categories.map((category) => (
+                            <Badge key={category} colorScheme="blue">
+                              {category}
+                            </Badge>
+                          ))}
+                        </Flex>
+                        <Text>Rating: {chef.rating} ⭐</Text>
+                        <Text>Price: ${chef.price}/session</Text>
+                        <Button size="sm" colorScheme="blue" mt={2}>
+                          Book Now
+                        </Button>
+                      </VStack>
+                    </Popup>
+                  </Marker>
+                ))
+              : allFilterChef.map((chef) => (
+                  <Marker
+                    key={chef._id}
+                    position={chef.coordinates}
+                    icon={chefIcon}
+                  >
+                    <Popup>
+                      <VStack align="flex-start" spacing={1}>
+                        <Heading size="sm">{chef.name}</Heading>
+                        <Flex wrap="wrap" gap={1}>
+                          {chef.categories.map((category) => (
+                            <Badge key={category} colorScheme="blue">
+                              {category}
+                            </Badge>
+                          ))}
+                        </Flex>
+                        <Text>Rating: {chef.rating} ⭐</Text>
+                        <Text>Price: ${chef.price}/session</Text>
+                        <Button size="sm" colorScheme="blue" mt={2}>
+                          Book Now
+                        </Button>
+                      </VStack>
+                    </Popup>
+                  </Marker>
+                ))}
             {userLocation && (
               <Marker
                 position={userLocation}

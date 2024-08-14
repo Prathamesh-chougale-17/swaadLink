@@ -370,7 +370,14 @@ const AdvancedChefMap: React.FC = () => {
                         </Flex>
                         <Text>Rating: {chef.rating} ⭐</Text>
                         <Text>Price: ${chef.price}/session</Text>
-                        <Button size="sm" colorScheme="blue" mt={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          mt={2}
+                          as={"a"}
+                          href={`/chefs/${chef._id}`}
+                          className="text-white"
+                        >
                           Book Now
                         </Button>
                       </VStack>
@@ -395,7 +402,14 @@ const AdvancedChefMap: React.FC = () => {
                         </Flex>
                         <Text>Rating: {chef.rating} ⭐</Text>
                         <Text>Price: ${chef.price}/session</Text>
-                        <Button size="sm" colorScheme="blue" mt={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          mt={2}
+                          as={"a"}
+                          href={`/chefs/${chef._id}`}
+                          className="text-white"
+                        >
                           Book Now
                         </Button>
                       </VStack>

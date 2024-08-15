@@ -87,12 +87,12 @@ To get started with Swaadlink on your local machine:
     ```bash
     cd backend
     ```
-    2. ***Start the Backend***
-    ```bash
-    npm start
-    ```
-    3.***Change the base URL from Frontend in src/services/api.ts file***
+    2. ***Change the base URL from Frontend in src/services/api.ts file***
     ```bash
     http://localhost:3001/api
+    ```
+    3. ***Start the Backend***
+    ```bash
+    npm start
     ```
 ### And you are Ready to go.

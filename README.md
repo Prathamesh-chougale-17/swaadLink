@@ -75,7 +75,7 @@ To get started with Swaadlink on your local machine:
    git clone https://github.com/Prathamesh-chougale-17/swaadLink.git
    ```
 2. **Go to Frontend Directory**
-   ```bash
+  ```bash
    cd frontend
   ```
 3. **Run the Code**

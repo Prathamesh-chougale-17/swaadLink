@@ -3,17 +3,20 @@
 Swaadlink is a Full-Stack Web Application designed to connect users with professional chefs for personalized home-cooked meals and special events. Whether you're planning a family gathering, a romantic dinner, or just want to enjoy a gourmet meal in the comfort of your home, Swaadlink makes it easy to find and book the perfect chef for your needs.
 
 ## Table of Contents
-- [About the Project](#about-the-project)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Screenshots](#screenshots)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+- [Swaadlink](#swaadlink)
+  - [Table of Contents](#table-of-contents)
+  - [About the Project](#about-the-project)
+    - [Motivation](#motivation)
+    - [Objectives](#objectives)
+  - [Features](#features)
+  - [Tech Stack](#tech-stack)
+    - [Frontend:](#frontend)
+    - [Backend:](#backend)
+    - [Database:](#database)
+    - [Other Tools:](#other-tools)
+  - [Architecture](#architecture)
+  - [Installation](#installation)
+    - [And you are Ready to go.](#and-you-are-ready-to-go)
 
 ## About the Project
 
@@ -69,5 +72,27 @@ To get started with Swaadlink on your local machine:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/swaadlink.git
-   cd swaadlink
+   git clone https://github.com/Prathamesh-chougale-17/swaadLink.git
+   ```
+2. **Go to Frontend Directory**
+   ```bash
+   cd frontend
+  ```
+3. **Run the Code**
+  ```bash
+  npm run dev
+  ```
+4. **Appendix** (Backend is hosted so we have connected the deployed version to frontend if you want to run the backend from local and connect to the frontend Please Follow along)
+   1. ***Go to Backend Directory from the root***
+    ```bash
+    cd backend
+    ```
+    2. ***Start the Backend***
+    ```bash
+    npm start
+    ```
+    3.***Change the base URL from Frontend in src/services/api.ts file***
+    ```bash
+    http://localhost:3001/api
+    ```
+### And you are Ready to go.

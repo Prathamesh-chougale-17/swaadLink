@@ -23,6 +23,24 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionBox = motion(Box);
 
+const FeatureCardDetail = [
+  {
+    icon: StarIcon,
+    title: "Top-rated Chefs",
+    description: "Connect with the best culinary talents in your area.",
+  },
+  {
+    icon: TimeIcon,
+    title: "Flexible Bookings",
+    description: "Choose from one-time events to regular meal preparations.",
+  },
+  {
+    icon: ChatIcon,
+    title: "Direct Communication",
+    description: "Chat with chefs to customize your perfect dining experience.",
+  },
+];
+
 const categories = [
   { name: "Maharashtrian", icon: FaUtensils },
   { name: "North Indian", icon: FaUtensils },
@@ -165,21 +183,14 @@ const Home: React.FC = () => {
       <Box bg={useColorModeValue("gray.100", "gray.700")} py={16}>
         <Container maxW="container.xl">
           <SimpleGrid columns={[1, null, 3]} spacing={10}>
-            <FeatureCard
-              icon={StarIcon}
-              title="Top-rated Chefs"
-              description="Connect with the best culinary talents in your area."
-            />
-            <FeatureCard
-              icon={TimeIcon}
-              title="Flexible Bookings"
-              description="Choose from one-time events to regular meal preparations."
-            />
-            <FeatureCard
-              icon={ChatIcon}
-              title="Direct Communication"
-              description="Chat with chefs to customize your perfect dining experience."
-            />
+            {FeatureCardDetail.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+              />
+            ))}
           </SimpleGrid>
         </Container>
       </Box>
